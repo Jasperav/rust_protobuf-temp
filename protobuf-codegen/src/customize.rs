@@ -174,7 +174,6 @@ pub fn customize_from_rustproto_for_message(source: &MessageOptions) -> Customiz
     let singular_field_option = rustproto::exts::singular_field_option.get(source);
     let serde_derive = rustproto::exts::serde_derive.get(source);
     let serde_derive_cfg = rustproto::exts::serde_derive_cfg.get(source);
-    let derives = rustproto::exts::der.get(source);
     let lite_runtime = None;
     let inside_protobuf = None;
     Customize {

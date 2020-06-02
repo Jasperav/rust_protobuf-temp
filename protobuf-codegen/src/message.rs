@@ -601,7 +601,7 @@ impl<'a> MessageGen<'a> {
 
                 for oneof in &oneofs {
                     w.write_line("");
-                    oneof.write(w);
+                    oneof.write(w, customize);
                 }
 
                 static NESTED_TYPE_NUMBER: protobuf::rt::Lazy<i32> = protobuf::rt::Lazy::INIT;
@@ -653,7 +653,7 @@ impl<'a> MessageGen<'a> {
                         &path,
                         self.info,
                     )
-                    .write(w);
+                    .write(w, customize);
                 }
             });
         }
