@@ -133,17 +133,16 @@ impl<'a> EnumGen<'a> {
         self.write_impl_value(w);
     }
 
-    fn write_enum(&self, w: &mut CodeWriter) {
+    fn write_enum(&self, w: &mut CodeWriter, customize: &Customize) {
         w.all_documentation(self.info, self.path);
 
-        let mut derive = Vec::new();
-        derive.push("Clone");
-        derive.push("Copy");
+        let mut derive = vec!["Clone", "Copy", "Eq", "Debug"];
         if !self.allow_alias() {
             derive.push("PartialEq");
         }
-        derive.push("Eq");
-        derive.push("Debug");
+        if let Some(ref d) = customize.derives {
+            derive.push(d.as_str());
+        }
         if !self.allow_alias() {
             derive.push("Hash");
         } else {

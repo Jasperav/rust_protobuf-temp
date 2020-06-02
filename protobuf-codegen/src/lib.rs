@@ -216,7 +216,7 @@ fn gen_file(
                     &path,
                     file.source_code_info.as_ref(),
                 )
-                .write(&mut w);
+                .write(&mut w, &customize);
             }
         }
 

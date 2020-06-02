@@ -550,9 +550,9 @@ impl<'a> MessageGen<'a> {
         );
     }
 
-    pub fn write(&self, w: &mut CodeWriter) {
+    pub fn write(&self, w: &mut CodeWriter, customize: &Customize) {
         w.all_documentation(self.info, self.path);
-        self.write_struct(w);
+        self.write_struct(w, customize);
 
         w.write_line("");
         self.write_impl_default_for_amp(w);
@@ -624,7 +624,7 @@ impl<'a> MessageGen<'a> {
                     }
                     first = false;
                     MessageGen::new(nested, self.root_scope, &self.customize, &path, self.info)
-                        .write(w);
+                        .write(w, customize);
                 }
 
                 static ENUM_TYPE_NUMBER: protobuf::rt::Lazy<i32> = protobuf::rt::Lazy::INIT;
