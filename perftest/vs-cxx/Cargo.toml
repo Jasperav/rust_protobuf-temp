@@ -1,0 +1,26 @@
+[package]
+name = "rust-protobuf-perftest"
+version = "0.0.0"
+authors = ["Stepan Koltsov <stepan.koltsov@gmail.com>"]
+publish = false
+edition = "2018"
+
+[features]
+default = []
+proto3 = []
+with-bytes = ["protobuf/with-bytes"]
+
+[dependencies.protobuf]
+path = "../../protobuf"
+
+[dependencies]
+rand = "~0.5"
+
+[build-dependencies]
+protoc-rust = { path = "../../protoc-rust" }
+
+[[bin]]
+
+name = "rust-protobuf-perftest"
+path = "perftest.rs"
+test = false

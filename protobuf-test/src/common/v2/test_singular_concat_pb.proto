@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+import "rustproto.proto";
+option (rustproto.generate_accessors_all) = true;
+
+
+package test_singular_concar;
+
+message TestSingularConcat {
+    optional string s = 1;
+    optional bytes b = 2;
+}

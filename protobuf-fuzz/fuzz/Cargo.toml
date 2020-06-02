@@ -1,0 +1,54 @@
+[package]
+name = "protobuf-fuzz-fuzz"
+version = "0.0.1"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies.protobuf-fuzz]
+path = ".."
+[dependencies.libfuzzer-sys]
+git = "https://github.com/rust-fuzz/libfuzzer-sys.git"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "all"
+path = "fuzz_targets/all.rs"
+
+[[bin]]
+name = "empty_message"
+path = "fuzz_targets/empty_message.rs"
+
+[[bin]]
+name = "empty_message_read"
+path = "fuzz_targets/empty_message_read.rs"
+
+[[bin]]
+name = "singular"
+path = "fuzz_targets/singular.rs"
+
+[[bin]]
+name = "singular_read"
+path = "fuzz_targets/singular_read.rs"
+
+[[bin]]
+name = "repeated"
+path = "fuzz_targets/repeated.rs"
+
+[[bin]]
+name = "repeated_read"
+path = "fuzz_targets/repeated_read.rs"
+
+[[bin]]
+name = "map"
+path = "fuzz_targets/map.rs"
+
+[[bin]]
+name = "map_read"
+path = "fuzz_targets/map_read.rs"
