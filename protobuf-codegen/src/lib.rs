@@ -61,6 +61,8 @@ pub use protobuf_name::ProtobufAbsolutePath;
 pub use protobuf_name::ProtobufIdent;
 pub use protobuf_name::ProtobufRelativePath;
 
+pub(crate) type DeriveMap = Option<HashMap<Option<String>, String>>;
+
 fn escape_byte(s: &mut String, b: u8) {
     if b == b'\n' {
         write!(s, "\\n").unwrap();
@@ -328,6 +330,17 @@ pub fn gen_and_write(
     }
 
     Ok(())
+}
+
+pub fn add_derives<'a>(derives: &mut Vec<&'a str>, map: &'a DeriveMap, type_name: String) {
+    if let Some(map) = map {
+        if let Some(all) = map.get(&None) {
+            derives.push(all.as_str());
+        }
+        if let Some(d) = map.get(&Some(type_name)) {
+            derives.push(d.as_str());
+        }
+    }
 }
 
 pub fn protoc_gen_rust_main() {

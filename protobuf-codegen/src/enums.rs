@@ -13,7 +13,7 @@ use crate::rust_name::RustIdentWithPath;
 use crate::scope::RootScope;
 use crate::scope::WithScope;
 use crate::scope::{EnumValueWithContext, EnumWithScope};
-use crate::serde;
+use crate::{serde, add_derives};
 
 #[derive(Clone)]
 pub(crate) struct EnumValueGen<'a> {
@@ -136,16 +136,9 @@ impl<'a> EnumGen<'a> {
     fn write_enum(&self, w: &mut CodeWriter, customize: &Customize) {
         w.all_documentation(self.info, self.path);
 
-        let mut derive = vec!["Clone", "Copy", "Eq", "Debug"];
-        if !self.allow_alias() {
-            derive.push("PartialEq");
-        }
-        if let Some(ref d) = customize.derives {
-            derive.push(d.as_str());
-        }
-        if !self.allow_alias() {
-            derive.push("Hash");
-        } else {
+        let mut derive = vec!["Clone", "Copy", "Eq", "Debug", "PartialEq", "Hash"];
+        add_derives(&mut derive, &customize.derives, self.type_name.ident.to_string());
+        if self.allow_alias() {
             w.comment("Note: you cannot use pattern matching for enums with allow_alias option");
         }
         w.derive(&derive);

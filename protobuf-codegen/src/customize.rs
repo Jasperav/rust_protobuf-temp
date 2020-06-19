@@ -2,6 +2,8 @@ use protobuf::descriptor::FieldOptions;
 use protobuf::descriptor::FileOptions;
 use protobuf::descriptor::MessageOptions;
 use protobuf::rustproto;
+use std::collections::{HashSet, HashMap};
+use crate::DeriveMap;
 
 /// Specifies style of generated code.
 /// Generated files can be customized using this proto
@@ -36,7 +38,7 @@ pub struct Customize {
     /// Used internally to generate protos bundled in protobuf crate
     /// like `descriptor.proto`
     pub inside_protobuf: Option<bool>,
-    pub derives: Option<String>,
+    pub derives: DeriveMap,
 
     // When adding more options please keep in sync with `parse_from_parameter` below.
     /// Make sure `Customize` is always used with `..Default::default()`
@@ -151,7 +153,7 @@ impl Customize {
             } else if n == "inside_protobuf" {
                 r.inside_protobuf = Some(parse_bool(v)?);
             } else if n == "derives" {
-                r.derives = Some(v.to_owned());
+                // TODO: Not sure how to parse this
             } else {
                 return Err(CustomizeParseParameterError::UnknownOptionName(
                     n.to_owned(),

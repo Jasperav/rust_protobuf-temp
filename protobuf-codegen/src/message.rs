@@ -21,7 +21,7 @@ use crate::rust_name::RustIdentWithPath;
 use crate::scope::MessageWithScope;
 use crate::scope::RootScope;
 use crate::scope::WithScope;
-use crate::serde;
+use crate::{serde, add_derives};
 
 /// Message info for codegen
 pub(crate) struct MessageGen<'a> {
@@ -470,15 +470,11 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_struct(&self, w: &mut CodeWriter, customize: &Customize) {
-        let mut derive = Vec::new();
+        let mut derive = vec!["Clone", "Default"];
+        add_derives(&mut derive, &customize.derives, self.type_name.ident.to_string());
         if self.supports_derive_partial_eq() {
             derive.push("PartialEq");
         }
-        if let Some(ref d) = customize.derives {
-            derive.push(d.as_str());
-        }
-        derive.extend(&["Clone", "Default"]);
-
         if self.lite_runtime {
             derive.push("Debug");
         }

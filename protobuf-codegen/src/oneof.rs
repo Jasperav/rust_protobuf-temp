@@ -13,7 +13,7 @@ use crate::rust_types_values::RustType;
 use crate::scope::WithScope;
 use crate::scope::{FieldWithContext, OneofVariantWithContext};
 use crate::scope::{OneofWithContext, RootScope};
-use crate::{serde, ProtobufAbsolutePath};
+use crate::{serde, ProtobufAbsolutePath, add_derives};
 use protobuf::descriptor::field_descriptor_proto;
 use std::collections::HashSet;
 
@@ -229,9 +229,7 @@ impl<'a> OneofGen<'a> {
 
     fn write_enum(&self, w: &mut CodeWriter, customize: &Customize) {
         let mut derive = vec!["Clone", "PartialEq", "Debug"];
-        if let Some(ref d) = customize.derives {
-            derive.push(d.as_str());
-        }
+        add_derives(&mut derive, &customize.derives, self.oneof.rust_name().ident.to_string());
         w.derive(&derive);
         serde::write_serde_attr(w, &self.customize, "derive(Serialize, Deserialize)");
         w.pub_enum(&self.oneof.rust_name().ident.to_string(), |w| {
