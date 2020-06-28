@@ -48,6 +48,7 @@ pub struct ProtobufEnumOrUnknown<E: ProtobufEnum> {
 impl<E: ProtobufEnum> ProtobufEnumOrUnknown<E> {
     /// Construct from typed enum
     pub fn new(e: E) -> ProtobufEnumOrUnknown<E> {
+        debug_assert_ne!(0, e.value());
         ProtobufEnumOrUnknown::from_i32(e.value())
     }
 
@@ -67,25 +68,28 @@ impl<E: ProtobufEnum> ProtobufEnumOrUnknown<E> {
     }
 
     /// Get `i32` value as typed enum. Return `None` is value is unknown.
-    pub fn enum_value(&self) -> Result<E, i32> {
-        E::from_i32(self.value).ok_or(self.value)
+    pub fn enum_value_no_zero(&self) -> Option<E> {
+        if self.value == 0 {
+            return None
+        }
+        E::from_i32(self.value)
     }
 
     /// Get contained enum, panic if value is unknown.
     pub fn unwrap(&self) -> E {
-        self.enum_value().unwrap()
+        self.enum_value_no_zero().unwrap()
     }
 
     /// Get `i32` value as typed enum.
     /// Return default enum value (first value) if value is unknown.
     pub fn enum_value_or_default(&self) -> E {
-        self.enum_value().unwrap_or_default()
+        self.enum_value_no_zero().unwrap_or_default()
     }
 
     /// Get `i32` value as typed enum.
     /// Return given enum value if value is unknown.
     pub fn enum_value_or(&self, map_unknown: E) -> E {
-        self.enum_value().unwrap_or(map_unknown)
+        self.enum_value_no_zero().unwrap_or(map_unknown)
     }
 
     /// Get enum descriptor by type.
@@ -108,9 +112,9 @@ impl<E: ProtobufEnum> Default for ProtobufEnumOrUnknown<E> {
 
 impl<E: ProtobufEnum> fmt::Debug for ProtobufEnumOrUnknown<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.enum_value() {
-            Ok(e) => fmt::Debug::fmt(&e, f),
-            Err(e) => fmt::Debug::fmt(&e, f),
+        match self.enum_value_no_zero() {
+            Some(e) => fmt::Debug::fmt(&e, f),
+            None => fmt::Debug::fmt("None", f),
         }
     }
 }
