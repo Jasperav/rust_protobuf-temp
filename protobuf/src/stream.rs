@@ -44,6 +44,8 @@ use crate::reflect::types::ProtobufTypeSint32;
 use crate::reflect::types::ProtobufTypeSint64;
 use crate::reflect::types::ProtobufTypeUint32;
 use crate::reflect::types::ProtobufTypeUint64;
+use std::str::FromStr;
+use uuid::{Uuid, Error};
 
 // Equal to the default buffer size of `BufWriter`, so when
 // `CodedOutputStream` wraps `BufWriter`, it often skips double buffering.
@@ -625,6 +627,20 @@ impl<'a> CodedInputStream<'a> {
             Err(_) => return Err(ProtobufError::WireError(WireError::Utf8Error)),
         };
         mem::replace(target, s);
+        Ok(())
+    }
+
+    /// Read `uuid` field, length delimited
+    pub fn read_uuid_into(&mut self, target: &mut Uuid) -> ProtobufResult<()> {
+        let mut string = String::new();
+
+        self.read_string_into(&mut string);
+
+        match uuid::Uuid::from_str(&string) {
+            Ok(o) => mem::replace(target, o),
+            Err(_) => return Err(ProtobufError::WireError(WireError::Utf8Error)),
+        };
+
         Ok(())
     }
 
@@ -1217,6 +1233,14 @@ impl<'a> CodedOutputStream<'a> {
     pub fn write_string(&mut self, field_number: u32, s: &str) -> ProtobufResult<()> {
         self.write_tag(field_number, wire_format::WireTypeLengthDelimited)?;
         self.write_string_no_tag(s)?;
+        Ok(())
+    }
+
+    /// Write `uuid` field
+    pub fn write_uuid(&mut self, field_number: u32, u: &uuid::Uuid) -> ProtobufResult<()> {
+        self.write_tag(field_number, wire_format::WireTypeLengthDelimited)?;
+        // TODO: No to_string()
+        self.write_bytes_no_tag(u.to_string().as_bytes())?;
         Ok(())
     }
 

@@ -282,6 +282,11 @@ pub fn string_size(field_number: u32, s: &str) -> u32 {
     tag_size(field_number) + string_size_no_tag(s)
 }
 
+/// Size of encoded uuid field.
+pub fn uuid_size(field_number: u32, s: &uuid::Uuid) -> u32 {
+    tag_size(field_number) + bytes_size_no_tag(s.to_string().as_bytes())
+}
+
 /// Size of encoded unknown fields size.
 pub fn unknown_fields_size(unknown_fields: &UnknownFields) -> u32 {
     let mut r = 0;
@@ -738,6 +743,18 @@ pub fn read_singular_proto3_string_into(
 ) -> ProtobufResult<()> {
     match wire_type {
         WireTypeLengthDelimited => is.read_string_into(target),
+        _ => Err(unexpected_wire_type(wire_type)),
+    }
+}
+
+/// Read singular `string` field for proto3.
+pub fn read_singular_proto3_uuid_into(
+    wire_type: WireType,
+    is: &mut CodedInputStream,
+    target: &mut uuid::Uuid,
+) -> ProtobufResult<()> {
+    match wire_type {
+        WireTypeLengthDelimited => is.read_uuid_into(target),
         _ => Err(unexpected_wire_type(wire_type)),
     }
 }

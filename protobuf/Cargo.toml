@@ -24,6 +24,8 @@ default = []
 bytes = { version = "0.5", optional = true }
 serde        = { version = "1.0", optional = true }
 serde_derive = { version = "1.0", optional = true }
+# TODO: Make a feature
+uuid = "0.8"
 
 [package.metadata.docs.rs]
 all-features = true
