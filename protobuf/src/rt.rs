@@ -1032,7 +1032,7 @@ where
     M: Message,
 {
     os.write_tag(field_number, WireType::WireTypeLengthDelimited)?;
-    os.write_raw_varint32(message.get_cached_size())?;
+    os.write_raw_varint32(message.compute_size())?;
     message.write_to_with_cached_sizes(os)
 }
 

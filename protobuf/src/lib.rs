@@ -4,7 +4,6 @@
 //! `protobuf-codegen`, `protobuf-codegen-pure` crates.
 //! See readme on the [project github page](https://github.com/stepancheg/rust-protobuf).
 
-#![deny(missing_docs)]
 #![deny(intra_doc_link_resolution_failure)]
 #![cfg_attr(rustc_nightly, feature(specialization))]
 
@@ -50,7 +49,7 @@ pub mod rustproto;
 mod clear;
 mod core;
 mod enums;
-mod error;
+pub mod error;
 pub mod ext;
 pub mod json;
 mod lazy;

@@ -435,17 +435,7 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_impl_show(&self, w: &mut CodeWriter) {
-        w.impl_for_block("::std::fmt::Debug", &format!("{}", self.type_name), |w| {
-            w.def_fn(
-                "fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result",
-                |w| {
-                    w.write_line(&format!(
-                        "{}::text_format::fmt(self, f)",
-                        protobuf_crate_path(&self.customize)
-                    ));
-                },
-            );
-        });
+
     }
 
     fn write_impl_clear(&self, w: &mut CodeWriter) {
@@ -470,13 +460,10 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_struct(&self, w: &mut CodeWriter, customize: &Customize) {
-        let mut derive = vec!["Clone", "Default"];
+        let mut derive = vec!["Clone", "Default", "Debug"];
         add_derives(&mut derive, &customize.derives, self.type_name.ident.to_string());
         if self.supports_derive_partial_eq() {
             derive.push("PartialEq");
-        }
-        if self.lite_runtime {
-            derive.push("Debug");
         }
         w.derive(&derive);
         serde::write_serde_attr(w, &self.customize, "derive(Serialize, Deserialize)");

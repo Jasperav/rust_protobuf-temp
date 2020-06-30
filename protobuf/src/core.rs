@@ -49,8 +49,6 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     ///
     /// Results in error if message is not fully initialized.
     fn write_to(&self, os: &mut CodedOutputStream) -> ProtobufResult<()> {
-        self.check_initialized()?;
-
         // cache sizes
         self.compute_size();
         // TODO: reserve additional
@@ -112,8 +110,6 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     /// > **Note**: You can use [`parse_from_bytes`](crate::parse_from_bytes)
     /// to do the reverse.
     fn write_to_bytes(&self) -> ProtobufResult<Vec<u8>> {
-        self.check_initialized()?;
-
         let size = self.compute_size() as usize;
         let mut v = Vec::with_capacity(size);
         // skip zerofill
