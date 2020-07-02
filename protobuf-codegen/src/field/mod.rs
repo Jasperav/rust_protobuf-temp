@@ -1035,7 +1035,7 @@ impl<'a> FieldGen<'a> {
     }
 
     // expression that returns size of data is variable
-    fn element_size(&self, var: &str, var_type: &RustType) -> String {
+    fn element_size(&self, var: &str, var_type: &RustType, c: &Customize) -> String {
         assert!(!self.is_repeated_packed());
 
         match field_type_size(self.proto_type) {
@@ -1059,12 +1059,22 @@ impl<'a> FieldGen<'a> {
                         &RustType::Ref(ref t) => (**t).clone(),
                         t => t.clone(),
                     };
-                    format!(
-                        "{}::rt::enum_or_unknown_size({}, {})",
-                        protobuf_crate_path(&self.customize),
-                        self.proto_field.number(),
-                        var_type.into_target(&param_type, var, &self.customize)
-                    )
+
+                    if c.strict_enums.unwrap_or(false) {
+                        format!(
+                            "{}::rt::enum_size({}, {})",
+                            protobuf_crate_path(&self.customize),
+                            self.proto_field.number(),
+                            var_type.into_target(&param_type, var, &self.customize)
+                        )
+                    } else {
+                        format!(
+                            "{}::rt::enum_or_unknown_size({}, {})",
+                            protobuf_crate_path(&self.customize),
+                            self.proto_field.number(),
+                            var_type.into_target(&param_type, var, &self.customize)
+                        )
+                    }
                 }
                 _ => {
                     let param_type = match var_type {
@@ -1709,14 +1719,22 @@ impl<'a> FieldGen<'a> {
     }
 
     // Write `merge_from` part for this oneof field
-    fn write_merge_from_oneof(&self, o: &OneofField, wire_type_var: &str, w: &mut CodeWriter) {
+    fn write_merge_from_oneof(&self, o: &OneofField, wire_type_var: &str, w: &mut CodeWriter, c: &Customize) {
         self.write_assert_wire_type(wire_type_var, w);
 
-        let typed = RustValueTyped {
-            value: format!(
+        let value = if c.strict_enums.unwrap_or(false) && &self.proto_type == &field_descriptor_proto::Type::TYPE_ENUM {
+            format!(
+                "is.read_enum()?",
+            )
+        } else {
+            format!(
                 "{}?",
                 self.proto_type.read("is", o.elem.primitive_type_variant())
-            ),
+            )
+        };
+
+        let typed = RustValueTyped {
+            value,
             rust_type: self.full_storage_iter_elem_type(
                 &self
                     .proto_field
@@ -1768,6 +1786,7 @@ impl<'a> FieldGen<'a> {
         s: &SingularField,
         wire_type_var: &str,
         w: &mut CodeWriter,
+        c: &Customize
     ) {
         match s.elem {
             FieldElem::Message(..)
@@ -1777,11 +1796,19 @@ impl<'a> FieldGen<'a> {
             }
             _ => {
                 self.write_assert_wire_type(wire_type_var, w);
-                let read_proc = format!(
-                    "{}?",
-                    self.proto_type.read("is", s.elem.primitive_type_variant())
-                );
-                self.write_self_field_assign_some(w, s, &read_proc);
+
+                let value = if c.strict_enums.unwrap_or(false) && &self.proto_type == &field_descriptor_proto::Type::TYPE_ENUM {
+                    format!(
+                        "is.read_enum()?",
+                    )
+                } else {
+                    format!(
+                        "{}?",
+                        self.proto_type.read("is", s.elem.primitive_type_variant())
+                    )
+                };
+
+                self.write_self_field_assign_some(w, s, &value);
             }
         }
     }
@@ -1820,11 +1847,11 @@ impl<'a> FieldGen<'a> {
     }
 
     // Write `merge_from` part for this field
-    pub fn write_merge_from_field(&self, wire_type_var: &str, w: &mut CodeWriter) {
+    pub fn write_merge_from_field(&self, wire_type_var: &str, w: &mut CodeWriter, c: &Customize) {
         match self.kind {
-            FieldKind::Oneof(ref f) => self.write_merge_from_oneof(&f, wire_type_var, w),
+            FieldKind::Oneof(ref f) => self.write_merge_from_oneof(&f, wire_type_var, w, c),
             FieldKind::Map(..) => self.write_merge_from_map(w),
-            FieldKind::Singular(ref s) => self.write_merge_from_singular(s, wire_type_var, w),
+            FieldKind::Singular(ref s) => self.write_merge_from_singular(s, wire_type_var, w, c),
             FieldKind::Repeated(..) => self.write_merge_from_repeated(wire_type_var, w),
         }
     }
@@ -1851,6 +1878,7 @@ impl<'a> FieldGen<'a> {
         item_var: &str,
         item_var_type: &RustType,
         sum_var: &str,
+        c: &Customize
     ) {
         assert!(!self.is_repeated_packed());
 
@@ -1869,7 +1897,7 @@ impl<'a> FieldGen<'a> {
                 w.write_line(&format!(
                     "{} += {};",
                     sum_var,
-                    self.element_size(item_var, item_var_type)
+                    self.element_size(item_var, item_var_type, c)
                 ));
             }
         }
@@ -1930,7 +1958,7 @@ impl<'a> FieldGen<'a> {
         };
     }
 
-    pub fn write_message_compute_field_size(&self, sum_var: &str, w: &mut CodeWriter) {
+    pub fn write_message_compute_field_size(&self, sum_var: &str, w: &mut CodeWriter, c: &Customize) {
         match self.kind {
             FieldKind::Singular(ref s) => {
                 self.write_if_let_self_field_is_some(s, w, |v, w| {
@@ -1940,7 +1968,7 @@ impl<'a> FieldGen<'a> {
                             w.write_line(&format!("{} += {};", sum_var, (s + tag_size) as isize));
                         }
                         None => {
-                            self.write_element_size(w, &v.value, &v.rust_type, sum_var);
+                            self.write_element_size(w, &v.value, &v.rust_type, sum_var, c);
                         }
                     };
                 });
@@ -1959,7 +1987,7 @@ impl<'a> FieldGen<'a> {
                     }
                     None => {
                         self.write_for_self_field(w, "value", |w, value_type| {
-                            self.write_element_size(w, "value", value_type, sum_var);
+                            self.write_element_size(w, "value", value_type, sum_var, c);
                         });
                     }
                 };

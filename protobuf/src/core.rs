@@ -43,7 +43,9 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     fn compute_size(&self) -> u32;
 
     /// Get size previously computed by `compute_size`.
-    fn get_cached_size(&self) -> u32;
+    fn get_cached_size(&self) -> u32 {
+        unimplemented!();
+    }
 
     /// Write the message to the stream.
     ///
@@ -139,9 +141,13 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     }
 
     /// Get a reference to unknown fields.
-    fn get_unknown_fields(&self) -> &UnknownFields;
+    fn get_unknown_fields(&self) -> &UnknownFields {
+        unimplemented!();
+    }
     /// Get a mutable reference to unknown fields.
-    fn mut_unknown_fields(&mut self) -> &mut UnknownFields;
+    fn mut_unknown_fields(&mut self) -> &mut UnknownFields {
+        unimplemented!();
+    }
 
     /// Create an empty message object.
     ///

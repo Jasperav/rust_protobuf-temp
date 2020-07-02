@@ -373,9 +373,15 @@ impl<'a> CodedInputStream<'a> {
     /// Read `enum` as `ProtobufEnum`
     pub fn read_enum<E: ProtobufEnum>(&mut self) -> ProtobufResult<E> {
         let i = self.read_int32()?;
-        match ProtobufEnum::from_i32(i) {
-            Some(e) => Ok(e),
-            None => Err(ProtobufError::WireError(WireError::InvalidEnumValue(i))),
+
+        if i == 0 {
+            // zero is not allowed, since that is the default value and nothing should be defaulted
+            Err(ProtobufError::WireError(WireError::InvalidEnumValue(i)))
+        } else {
+            match ProtobufEnum::from_i32(i) {
+                Some(e) => Ok(e),
+                None => Err(ProtobufError::WireError(WireError::InvalidEnumValue(i))),
+            }
         }
     }
 
