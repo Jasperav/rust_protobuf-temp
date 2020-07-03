@@ -34,11 +34,15 @@ pub struct Customize {
     /// When `serde_derive` is set, serde annotations will be guarded with `#[cfg(cfg, ...)]`.
     pub serde_derive_cfg: Option<String>,
     pub strict_enums: Option<bool>,
+    // Don't allow values to be send with their default values
+    pub strict_values: Option<bool>,
+    pub no_option: Option<&'static str>,
     pub skip_unknown_fields: Option<bool>,
     pub skip_cached_size: Option<bool>,
     pub skip_initialized_check: Option<bool>,
     pub skip_descriptor_static: Option<bool>,
     pub use_derive_debug: Option<bool>,
+    pub remove_accessors: Option<bool>,
     /// Enable lite runtime
     pub lite_runtime: Option<bool>,
     /// Used internally to generate protos bundled in protobuf crate
@@ -197,11 +201,14 @@ pub fn customize_from_rustproto_for_message(source: &MessageOptions) -> Customiz
         serde_derive,
         serde_derive_cfg,
         strict_enums: None, // TODO
+        strict_values: None, // TODO
+        no_option: None, // TODO
         skip_unknown_fields: None, // TODO
         skip_cached_size: None, // TODO
         skip_initialized_check: None, // TODO
         skip_descriptor_static: None, // TODO
         use_derive_debug: None, // TODO
+        remove_accessors: None, // TODO
         lite_runtime,
         inside_protobuf,
         derives: None, // TODO
@@ -237,11 +244,14 @@ pub fn customize_from_rustproto_for_field(source: &FieldOptions) -> Customize {
         serde_derive,
         serde_derive_cfg,
         strict_enums: None, // TODO
+        strict_values: None, // TODO
+        no_option: None, // TODO
         skip_unknown_fields: None, // TODO
         skip_cached_size: None, // TODO
         skip_initialized_check: None, // TODO
         skip_descriptor_static: None, // TODO
         use_derive_debug: None, // TODO
+        remove_accessors: None, // TODO
         lite_runtime,
         inside_protobuf,
         derives: None, // TODO
@@ -276,11 +286,14 @@ pub fn customize_from_rustproto_for_file(source: &FileOptions) -> Customize {
         serde_derive,
         serde_derive_cfg,
         strict_enums: None, // TODO
+        strict_values: None, // TODO
+        no_option: None, // TODO
         skip_unknown_fields: None, // TODO
         skip_cached_size: None, // TODO
         skip_initialized_check: None, // TODO
         skip_descriptor_static: None, // TODO
         use_derive_debug: None, // TODO
+        remove_accessors: None, // TODO
         lite_runtime,
         inside_protobuf,
         derives: None, // TODO

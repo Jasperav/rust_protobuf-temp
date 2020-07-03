@@ -9,7 +9,7 @@ use crate::bytes::Bytes;
 use crate::chars::Chars;
 
 use crate::buf_read_iter::BufReadIter;
-use crate::core::Message;
+use crate::core::{Message, StrictMerge};
 use crate::enums::ProtobufEnum;
 use crate::error::ProtobufError;
 use crate::error::ProtobufResult;
@@ -657,6 +657,17 @@ impl<'a> CodedInputStream<'a> {
         message.merge_from(self)?;
         self.pop_limit(old_limit);
         Ok(())
+    }
+
+    pub fn strict_merge_message<S, M>(&mut self) -> ProtobufResult<M>
+        where
+            M: Message,
+            S: StrictMerge<M>, {
+        let len = self.read_raw_varint64()?;
+        let old_limit = self.push_limit(len)?;
+        let merge = S::strict_merge(self)?;
+        self.pop_limit(old_limit);
+        Ok(merge)
     }
 
     /// Read message

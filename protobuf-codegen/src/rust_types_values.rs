@@ -70,7 +70,15 @@ impl RustType {
             RustType::Slice(ref param) => format!("[{}]", param.to_code(customize)),
             RustType::Str => format!("str"),
             RustType::Option(ref param) => {
-                format!("::std::option::Option<{}>", param.to_code(customize))
+                let type_str = param.to_code(customize);
+
+                if let Some(e) = customize.no_option {
+                    if !type_str.ends_with(e) {
+                        return format!("{}", &type_str)
+                    }
+                }
+
+                format!("::std::option::Option<{}>", &type_str)
             }
             RustType::SingularField(ref param) => format!(
                 "{}::SingularField<{}>",
