@@ -1222,6 +1222,11 @@ impl<'a> FieldGen<'a> {
             w.all_documentation(self.info, &self.path);
 
             self.write_serde_attr(w);
+
+            if self.customize.strict_values.unwrap_or(false) {
+                w.write_line(format!("#[t_{}]", protobuf_name(self.proto_type)));
+            }
+
             let vis = self.visibility();
             w.field_decl_vis(
                 vis,

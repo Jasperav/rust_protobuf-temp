@@ -20,6 +20,7 @@ use protobuf::descriptor::FieldDescriptorProto;
 use protobuf::descriptor::FileDescriptorProto;
 use protobuf::descriptor::OneofDescriptorProto;
 
+#[derive(Debug)]
 pub(crate) struct RootScope<'a> {
     pub file_descriptors: &'a [FileDescriptorProto],
 }
