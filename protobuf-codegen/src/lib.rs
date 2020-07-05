@@ -87,6 +87,9 @@ fn write_file_descriptor_data(
     customize: &Customize,
     w: &mut CodeWriter,
 ) {
+    if customize.strict_values.unwrap_or(false) {
+        return;
+    }
     let fdp_bytes = file.write_to_bytes().unwrap();
     w.write_line("static file_descriptor_proto_data: &'static [u8] = b\"\\");
     w.indented(|w| {

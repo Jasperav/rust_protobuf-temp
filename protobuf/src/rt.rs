@@ -282,11 +282,6 @@ pub fn string_size(field_number: u32, s: &str) -> u32 {
     tag_size(field_number) + string_size_no_tag(s)
 }
 
-/// Size of encoded uuid field.
-pub fn uuid_size(field_number: u32, s: &uuid::Uuid) -> u32 {
-    tag_size(field_number) + bytes_size_no_tag(s.to_string().as_bytes())
-}
-
 /// Size of encoded unknown fields size.
 pub fn unknown_fields_size(unknown_fields: &UnknownFields) -> u32 {
     let mut r = 0;

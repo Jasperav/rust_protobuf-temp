@@ -1228,18 +1228,26 @@ impl<'a> FieldGen<'a> {
             }
 
             let vis = self.visibility();
+            let mut rust_type = self
+                .full_storage_type(
+                    &self
+                        .proto_field
+                        .message
+                        .scope
+                        .get_file_and_mod(self.customize.clone()),
+                )
+                .to_code(&self.customize);
+
+            if let Some(e) = self.customize.wrap_in_option_if_starts_with {
+                if self.rust_name.get().starts_with(e) {
+                    rust_type = format!("std::option::Option<{}>", rust_type);
+                }
+            }
+
             w.field_decl_vis(
                 vis,
                 self.rust_name.get(),
-                &self
-                    .full_storage_type(
-                        &self
-                            .proto_field
-                            .message
-                            .scope
-                            .get_file_and_mod(self.customize.clone()),
-                    )
-                    .to_code(&self.customize),
+                &rust_type
             );
         }
     }

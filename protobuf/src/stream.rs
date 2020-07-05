@@ -640,7 +640,7 @@ impl<'a> CodedInputStream<'a> {
     pub fn read_uuid_into(&mut self, target: &mut Uuid) -> ProtobufResult<()> {
         let mut string = String::new();
 
-        self.read_string_into(&mut string);
+        self.read_string_into(&mut string)?;
 
         match uuid::Uuid::from_str(&string) {
             Ok(o) => mem::replace(target, o),

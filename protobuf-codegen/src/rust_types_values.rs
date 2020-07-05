@@ -73,7 +73,7 @@ impl RustType {
                 let type_str = param.to_code(customize);
 
                 if let Some(e) = customize.no_option {
-                    if !type_str.ends_with(e) {
+                    if !type_str.starts_with(e) {
                         return format!("{}", &type_str)
                     }
                 }
