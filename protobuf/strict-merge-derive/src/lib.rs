@@ -1,8 +1,66 @@
 use syn::{DeriveInput, Data, Fields, Field};
 use quote::{quote, format_ident};
-use proc_macro2::TokenStream;
+use proc_macro2::{TokenStream, Punct, Literal};
+use syn::parse::{Parse, ParseBuffer};
+use syn::parse_macro_input;
 
-#[proc_macro_derive(StrictMerge, attributes(t_double, t_float, t_int32, t_int64, t_uint32, t_uint64, t_sint32, t_sint64, t_fixed32, t_fixed64, t_sfixed32, t_sfixed64, t_bool, t_string, t_bytes, t_enum, t_message, t_group, t_uuid))]
+fn parse_literal(input: &ParseBuffer) -> syn::Result<String> {
+    Ok(Literal::parse(input)?.to_string().replace("\"", ""))
+}
+
+struct Prototype(String);
+
+impl Parse for Prototype {
+    fn parse(input: &ParseBuffer) -> syn::Result<Self> {
+        // Ignore the '='
+        Punct::parse(input)?;
+
+        Ok(Prototype(parse_literal(input)?))
+    }
+}
+
+struct FieldNumber(i32);
+
+impl Parse for FieldNumber {
+    fn parse(input: &ParseBuffer) -> syn::Result<Self> {
+        // Ignore the '='
+        Punct::parse(&input)?;
+
+        let val = Literal::parse(input)?;
+
+        Ok(FieldNumber(val.to_string().parse().unwrap()))
+    }
+}
+
+#[derive(Debug)]
+struct OneOfMapping {
+    name: String,
+    prototype: String,
+    field_number: i32,
+}
+
+impl Parse for OneOfMapping {
+    fn parse(input: &ParseBuffer) -> syn::Result<Self> {
+        // Ignore the '='
+        Punct::parse(&input)?;
+
+        let info = parse_literal(input)?;
+        let (name, info) = info.split_at(info.find("|").unwrap() + 1);
+        let (prototype, field_number) = info.split_at(info.find("|").unwrap() + 1);
+
+        Ok(OneOfMapping {
+            name: name.replace("|", ""),
+            prototype: prototype.replace("|", ""),
+            field_number: field_number.parse().unwrap(),
+        })
+    }
+}
+
+fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStream> {
+    field.attrs.iter().filter(|f| f.path.segments.iter().find(|f| attr == &f.ident.to_string()).is_some()).map(|a| a.tokens.clone().into()).collect()
+}
+
+#[proc_macro_derive(StrictMerge, attributes(prototype, fieldnumber, oneof))]
 pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input: DeriveInput = syn::parse(input).unwrap();
     let name = derive_input.ident;
@@ -35,15 +93,18 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 .map(|f| f.to_string() + "_opt")
                 .map(|f| format_ident!("{}", f))
                 .collect::<Vec<_>>();
-            for (index, field) in named_fields.iter().enumerate() {
-                let index = index as u32 + 1;
+            for field in named_fields.iter() {
                 let p = || panic!("{:#?}", field);
 
-                let attr = field.attrs.last().unwrap().path.segments.first().unwrap().ident.to_string().replace("t_", "");
+                let prototype = find_attr(field, "prototype").remove(0);
+                // Remove weird \"
+                let prototype = parse_macro_input!(prototype as Prototype).0;
+                let field_number = find_attr(field, "fieldnumber").remove(0);
+                let field_number = parse_macro_input!(field_number as FieldNumber).0;
                 let ident = field.ident.clone().unwrap();
                 let field_opt = format_ident!("{}", ident.to_string() + "_opt");
 
-                let (deserialize_field, default_value) = match attr.as_str() {
+                let (deserialize_field, default_value) = match prototype.as_str() {
                     "double" => {
                         compute_sizer.push(quote! {
                             if self.#ident != 0. {
@@ -53,7 +114,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                         os_writer.push(quote! {
                             if self.#ident != 0. {
-                                os.write_double(#index, self.#ident)?;
+                                os.write_double(#field_number, self.#ident)?;
                             }
                         });
 
@@ -65,17 +126,33 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         }, Some(quote! {
                             0 as f64
                         }))
-                    },
+                    }
+                    "oneof" => {
+                        let mut mapping = vec![];
+
+                        // Cant get it to work with into_iter and mapping...
+                        for att in find_attr(field, "oneof") {
+                            mapping.push(parse_macro_input!(att as OneOfMapping));
+                        }
+
+                        let size_computer = mapping
+                            .iter()
+                            .map(|m| {
+
+                            })
+
+                        panic!("{:#?}", mapping);
+                    }
                     "uint32" => {
                         compute_sizer.push(quote! {
                             if self.#ident != 0 {
-                                size += ::protobuf::rt::value_size(#index, self.#ident, ::protobuf::wire_format::WireTypeVarint);
+                                size += ::protobuf::rt::value_size(#field_number, self.#ident, ::protobuf::wire_format::WireTypeVarint);
                             }
                         });
 
                         os_writer.push(quote! {
                             if self.#ident != 0 {
-                                os.write_uint32(#index, self.#ident)?;
+                                os.write_uint32(#field_number, self.#ident)?;
                             }
                         });
 
@@ -87,7 +164,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         }, Some(quote! {
                             0 as u32
                         }))
-                    },
+                    }
                     "sfixed64" => {
                         compute_sizer.push(quote! {
                             if self.#ident != 0 {
@@ -97,7 +174,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                         os_writer.push(quote! {
                             if self.#ident != 0 {
-                                os.write_sfixed64(#index, self.#ident)?;
+                                os.write_sfixed64(#field_number, self.#ident)?;
                             }
                         });
 
@@ -109,14 +186,14 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         }, Some(quote! {
                             0 as i64
                         }))
-                    },
+                    }
                     "uuid" => {
                         compute_sizer.push(quote! {
-                            size += ::protobuf::rt::string_size(#index, &self.#ident.to_string());
+                            size += ::protobuf::rt::string_size(#field_number, &self.#ident.to_string());
                         });
 
                         os_writer.push(quote! {
-                             os.write_string(#index, &self.#ident.to_string())?;
+                             os.write_string(#field_number, &self.#ident.to_string())?;
                         });
 
                         (quote! {
@@ -136,17 +213,17 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                             #field_opt = Some(uuid);
                         }, None)
-                    },
+                    }
                     "string" => {
                         compute_sizer.push(quote! {
                             if !self.#ident.is_empty() {
-                                size += ::protobuf::rt::string_size(#index, &self.#ident);
+                                size += ::protobuf::rt::string_size(#field_number, &self.#ident);
                             }
                         });
 
                         os_writer.push(quote! {
                             if !self.#ident.is_empty() {
-                                os.write_string(#index, &self.#ident)?;
+                                os.write_string(#field_number, &self.#ident)?;
                             }
                         });
 
@@ -155,17 +232,17 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         }, Some(quote! {
                             String::new()
                         }))
-                    },
+                    }
                     "bytes" => {
                         compute_sizer.push(quote! {
                             if !self.#ident.is_empty() {
-                                size += ::protobuf::rt::bytes_size(#index, &self.#ident);
+                                size += ::protobuf::rt::bytes_size(#field_number, &self.#ident);
                             }
                         });
 
                         os_writer.push(quote! {
                             if !self.#ident.is_empty() {
-                                os.write_bytes(#index, &self.#ident)?;
+                                os.write_bytes(#field_number, &self.#ident)?;
                             }
                         });
 
@@ -176,12 +253,12 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         }))
                     }
 
-                    _ => unreachable!("Unexpected attributed found: {}", attr)
+                    _ => unreachable!("Unexpected attributed found: {} for field {:#?}", prototype, field)
                 };
 
                 deserialize.push(quote! {
-                    #index => {
-                        debug_assert!(processed_field_indexes.insert(#index), "Double processed field index found for matching field {} (note that fields indexes start with 1, not 0)", #index);
+                    #field_number => {
+                        debug_assert!(processed_field_indexes.insert(#field_number), "Double processed field index found for matching field {} (note that fields indexes start with 1, not 0)", #field_number);
                         #deserialize_field
                     }
                 });
@@ -261,7 +338,6 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     size as usize
                 }
             })
-
         }
         Data::Enum(e) => {
             panic!();
