@@ -2,6 +2,7 @@ use proc_macro2::{Ident, TokenStream};
 use crate::matcher::Proto;
 use quote::quote;
 use quote::format_ident;
+use crate::parser::OneOfMapping;
 
 pub struct Calculator<'a> {
     pub proto: Proto<'a>,
@@ -13,23 +14,24 @@ pub struct Calculator<'a> {
 }
 
 impl Calculator<'_> {
-    pub fn calculate<T: ValueCalculator>(self) {
-        T::calculate(self.proto, self.field_number, self.ident, self.deserializer, self.compute_sizer, self.os_writer);
+    pub fn calculate<T: ValueCalculator>(self, t: T) {
+        T::calculate(self.proto, self.field_number, self.ident, &t, self.deserializer, self.compute_sizer, self.os_writer);
     }
 }
 
 pub trait ValueCalculator {
+    fn read(&self) -> TokenStream;
     fn size(ident: &TokenStream) -> TokenStream;
     fn write(field_number: u32, ident: &TokenStream) -> TokenStream;
-    fn read() -> TokenStream;
     fn wire_check() -> TokenStream;
     fn default_value(ident: &TokenStream) -> Option<TokenStream>;
     // TODO: Maybe this can be removed and be replaced by default_value
     fn check_has_not_default_value(ident: &TokenStream) -> Option<TokenStream>;
 
-    fn calculate(proto: Proto,
+    fn calculate<T: ValueCalculator>(proto: Proto,
                  field_number: u32,
                  ident: &Ident,
+                 value_calculator: &T,
                  deserializer: &mut Vec<TokenStream>,
                  compute_sizer: &mut Vec<TokenStream>,
                  os_writer: &mut Vec<TokenStream>) {
@@ -41,7 +43,7 @@ pub trait ValueCalculator {
 
         let size = Self::size(&another_ident);
         let write = Self::write(field_number, &another_ident);
-        let reader = Self::read();
+        let reader = Self::read(value_calculator);
         let mut assign = Self::wire_check();
 
         match proto {
@@ -160,7 +162,47 @@ pub trait ValueCalculator {
     }
 }
 
+impl ValueCalculator for Vec<OneOfMapping> {
+    fn read(&self) -> TokenStream {
+        let mut tokens = TokenStream::new();
+
+        for attr in self.iter() {
+            attr.
+        }
+
+        panic!();
+    }
+
+    fn size(ident: &TokenStream) -> TokenStream {
+        unimplemented!()
+    }
+
+    fn write(field_number: u32, ident: &TokenStream) -> TokenStream {
+        unimplemented!()
+    }
+
+    fn wire_check() -> TokenStream {
+        quote! { }
+    }
+
+    fn default_value(ident: &TokenStream) -> Option<TokenStream> {
+        None
+    }
+
+    fn check_has_not_default_value(ident: &TokenStream) -> Option<TokenStream> {
+        Some(quote! {
+            #ident.is_none()
+        })
+    }
+}
+
 impl ValueCalculator for f64 {
+    fn read(&self) -> TokenStream {
+        quote! {
+            is.read_double()?
+        }
+    }
+
     fn size(ident: &TokenStream) -> TokenStream {
         quote! {
             size += 9;
@@ -170,12 +212,6 @@ impl ValueCalculator for f64 {
     fn write(field_number: u32, ident: &TokenStream) -> TokenStream {
         quote! {
             os.write_double(#field_number, #ident)?;
-        }
-    }
-
-    fn read() -> TokenStream {
-        quote! {
-            is.read_double()?
         }
     }
 
@@ -194,8 +230,6 @@ impl ValueCalculator for f64 {
     }
 
     fn check_has_not_default_value(ident: &TokenStream) -> Option<TokenStream> {
-        Some(quote! {
-            #ident != 0 as f64
-        })
+        None
     }
 }

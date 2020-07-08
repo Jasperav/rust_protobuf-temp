@@ -4,6 +4,7 @@ use proc_macro2::{TokenStream, Punct, Literal, Ident};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
 use crate::value_calculator::{ValueCalculator, Calculator};
+use crate::parser::OneOfMapping;
 
 pub fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStream> {
     field.attrs.iter().filter(|f| f.path.segments.iter().find(|f| attr == &f.ident.to_string()).is_some()).map(|a| a.tokens.clone().into()).collect()
@@ -31,8 +32,10 @@ pub enum Proto<'a> {
     // e.g.
     // Ok(MyStruct { ... })
     // The dots represent this variable
-    Simple(&'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>)
+    Simple(&'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>),
 }
+
+pub fn prototype_to_type(prototype: &str) -> Type
 
 pub fn calculate_values(
     prototype: &str,
@@ -41,20 +44,26 @@ pub fn calculate_values(
     ident: Ident,
     deserializer: &mut Vec<TokenStream>,
     compute_sizer: &mut Vec<TokenStream>,
-    os_writer: &mut Vec<TokenStream>
+    os_writer: &mut Vec<TokenStream>,
 ) {
-
     let calculator = Calculator {
         proto,
         field_number,
         ident: &ident,
         deserializer,
         compute_sizer,
-        os_writer
+        os_writer,
     };
     match prototype {
-        "double" => {
-            calculator.calculate::<f64>();
+        "double" => calculator.calculate(0 as f64),
+        "oneof" => {
+            // Can't get it working with map
+            let mut attrs = vec![];
+            for att in find_attr(field, "oneof") {
+                attrs.push(parse_macro_input!(att as OneOfMapping));
+            }
+
+            calculator.calculate(attrs);
         },
         _ => panic!()
 //         "uint32" => {
