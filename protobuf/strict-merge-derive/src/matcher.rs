@@ -3,8 +3,9 @@ use quote::{quote, format_ident};
 use proc_macro2::{TokenStream, Punct, Literal, Ident};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
-use crate::value_calculator::{ValueCalculator, Calculator};
-use crate::parser::OneOfMapping;
+use crate::parser::{Prototype, FieldNumber, OneOfMapping, OneOfMapper};
+use crate::value_calculator::{Calculator, ValueCalculator, ProtobufEnum};
+use std::str::FromStr;
 
 pub fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStream> {
     field.attrs.iter().filter(|f| f.path.segments.iter().find(|f| attr == &f.ident.to_string()).is_some()).map(|a| a.tokens.clone().into()).collect()
@@ -16,7 +17,7 @@ pub enum Proto<'a> {
     //
     // my_property = calculate_values -> ident
     // some_enum::case -> this ident
-    OneOf(Ident),
+    OneOfCase(Ident),
     // Holds the declaration of values
     // so if this struct is derialized:
     // struct my_struct { my_value: i32 }
@@ -32,40 +33,20 @@ pub enum Proto<'a> {
     // e.g.
     // Ok(MyStruct { ... })
     // The dots represent this variable
-    Simple(&'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>),
+    //
+    // Fourth variable is true when dealing with a oneof variable
+    Simple(&'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>, &'a mut Vec<TokenStream>, Option<OneOfMapper>),
 }
 
-pub fn prototype_to_type(prototype: &str) -> Type
+pub fn str_to_value_calculator(str: &str) -> Box<dyn ValueCalculator> {
+    match str {
+        "oneof" => unimplemented!("Oneof is not supported"),
+        "double" => Box::new(0 as f64),
+        "enum" => Box::new(ProtobufEnum),
+        _ => unimplemented!("Nothing configured for type: {}", str)
+    }
+}
 
-pub fn calculate_values(
-    prototype: &str,
-    proto: Proto,
-    field_number: u32,
-    ident: Ident,
-    deserializer: &mut Vec<TokenStream>,
-    compute_sizer: &mut Vec<TokenStream>,
-    os_writer: &mut Vec<TokenStream>,
-) {
-    let calculator = Calculator {
-        proto,
-        field_number,
-        ident: &ident,
-        deserializer,
-        compute_sizer,
-        os_writer,
-    };
-    match prototype {
-        "double" => calculator.calculate(0 as f64),
-        "oneof" => {
-            // Can't get it working with map
-            let mut attrs = vec![];
-            for att in find_attr(field, "oneof") {
-                attrs.push(parse_macro_input!(att as OneOfMapping));
-            }
-
-            calculator.calculate(attrs);
-        },
-        _ => panic!()
 //         "uint32" => {
 //
 //
@@ -195,5 +176,3 @@ pub fn calculate_values(
 //             panic!("{:#?}", mapping);
 //         }
 //         _ => unreachable!("Unexpected attributed found: {} for field {:#?}", prototype, field)
-    }
-}

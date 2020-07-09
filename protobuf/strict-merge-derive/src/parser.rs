@@ -1,8 +1,10 @@
-use syn::{DeriveInput, Data, Fields, Field};
+use syn::{DeriveInput, Data, Fields, Field, Type};
 use quote::{quote, format_ident};
-use proc_macro2::{TokenStream, Punct, Literal};
+use proc_macro2::{TokenStream, Punct, Literal, Ident};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
+use crate::value_calculator::ValueCalculator;
+use crate::matcher::str_to_value_calculator;
 
 fn parse_literal(input: &ParseBuffer) -> syn::Result<String> {
     Ok(Literal::parse(input)?.to_string().replace("\"", ""))
@@ -32,11 +34,15 @@ impl Parse for FieldNumber {
     }
 }
 
-#[derive(Debug)]
+pub struct OneOfMapper {
+    pub mapping: Vec<OneOfMapping>,
+    pub full_type: Type
+}
+
 pub struct OneOfMapping {
-    pub name: String,
-    pub prototype: String,
-    pub field_number: i32,
+    pub enum_case: Ident,
+    pub proto_mapping: Box<dyn ValueCalculator>,
+    pub field_number: u32,
 }
 
 impl Parse for OneOfMapping {
@@ -47,10 +53,11 @@ impl Parse for OneOfMapping {
         let info = parse_literal(input)?;
         let (name, info) = info.split_at(info.find("|").unwrap() + 1);
         let (prototype, field_number) = info.split_at(info.find("|").unwrap() + 1);
+        let prototype = prototype.replace("|", "");
 
         Ok(OneOfMapping {
-            name: name.replace("|", ""),
-            prototype: prototype.replace("|", ""),
+            enum_case: format_ident!("{}", name.replace("|", "")),
+            proto_mapping: str_to_value_calculator(&prototype),
             field_number: field_number.parse().unwrap(),
         })
     }

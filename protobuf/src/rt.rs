@@ -21,7 +21,7 @@ use crate::repeated::RepeatedField;
 use crate::singular::SingularField;
 use crate::stream::CodedInputStream;
 use crate::stream::CodedOutputStream;
-use crate::wire_format;
+use crate::{wire_format, ProtobufEnumStrict};
 use crate::wire_format::WireType;
 use crate::wire_format::WireTypeFixed32;
 use crate::wire_format::WireTypeFixed64;
@@ -246,6 +246,10 @@ fn enum_size_no_tag<E: ProtobufEnum>(value: E) -> u32 {
     value.value().len_varint()
 }
 
+fn enum_size_strict_no_tag<E: ProtobufEnumStrict>(value: E) -> u32 {
+    value.value().len_varint()
+}
+
 fn enum_or_unknown_size_no_tag<E: ProtobufEnum>(value: ProtobufEnumOrUnknown<E>) -> u32 {
     value.value().len_varint()
 }
@@ -254,6 +258,10 @@ fn enum_or_unknown_size_no_tag<E: ProtobufEnum>(value: ProtobufEnumOrUnknown<E>)
 // TODO: drop
 pub fn enum_size<E: ProtobufEnum>(field_number: u32, value: E) -> u32 {
     tag_size(field_number) + enum_size_no_tag(value)
+}
+
+pub fn enum_size_strict<E: ProtobufEnumStrict>(field_number: u32, value: E) -> u32 {
+    tag_size(field_number) + enum_size_strict_no_tag(value)
 }
 
 /// Size of encoded enum field value.
