@@ -6,8 +6,8 @@ use crate::reflect::EnumValueDescriptor;
 use crate::reflect::ProtobufValue;
 use crate::ProtobufResult;
 
-pub trait ProtobufEnumStrict: Sized {
-    fn value(&self) -> i32;
+pub trait ProtobufEnumStrict: Sized + Copy {
+    fn value(self) -> i32;
     fn from_i32(v: i32) -> ProtobufResult<Self>;
 }
 
