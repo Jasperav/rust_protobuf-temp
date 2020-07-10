@@ -665,13 +665,12 @@ impl<'a> CodedInputStream<'a> {
         Ok(())
     }
 
-    pub fn strict_merge_message<S, M>(&mut self) -> ProtobufResult<M>
+    pub fn strict_merge_message<M>(&mut self) -> ProtobufResult<M>
         where
-            M: Message,
-            S: StrictMerge<M>, {
+            M: StrictMerge<M>, {
         let len = self.read_raw_varint64()?;
         let old_limit = self.push_limit(len)?;
-        let merge = S::strict_merge(self)?;
+        let merge = M::strict_merge(self)?;
         self.pop_limit(old_limit);
         Ok(merge)
     }

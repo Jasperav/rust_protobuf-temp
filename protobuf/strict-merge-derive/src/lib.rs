@@ -164,8 +164,6 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 }
             });
 
-//            panic!("{:#?}", methods.remove(methods.len() - 1).to_string());
-
             methods.push(quote! {
                 fn write_to_os(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
                     #(#os_writer)*
