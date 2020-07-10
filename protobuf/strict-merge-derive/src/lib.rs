@@ -1,11 +1,12 @@
-use syn::{DeriveInput, Data, Fields, Field};
+use syn::{DeriveInput, Data, Fields, Field, Type, PathSegment, PathArguments, GenericArgument, TypePath, Path};
 use quote::{quote, format_ident};
 use proc_macro2::{TokenStream, Punct, Literal};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
-use crate::matcher::{Proto, find_attr, str_to_value_calculator};
+use crate::matcher::{Proto, find_attr, str_to_value_calculator, MapType};
 use crate::parser::{Prototype, FieldNumber, OneOfMapping, OneOfMapper};
 use crate::value_calculator::{Calculator, ValueCalculator};
+use syn::punctuated::Punctuated;
 
 
 mod matcher;
@@ -51,40 +52,75 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 let prototype = find_attr(field, "prototype").remove(0);
                 // Remove weird \"
                 let prototype = parse_macro_input!(prototype as Prototype).0;
-                let field_number = find_attr(field, "fieldnumber").remove(0);
-                let field_number = parse_macro_input!(field_number as FieldNumber).0;
                 let ident = field.ident.clone().unwrap();
 
-                let (proto, value_calculator): (_, Box<dyn ValueCalculator>) = if prototype == "oneof" {
+                let (is_option, type_without_opt) = match field.ty.clone() {
+                    Type::Path(p) => {
+                        let segments: PathSegment = p.path.segments.into_iter().collect::<Vec<_>>().remove(0);
+                        if segments.ident.to_string().as_str() != "Option" {
+                            let field_ty = field.ty.clone();
+
+                            let ty = quote! { #field_ty };
+
+                            (false, ty)
+                        } else {
+                            // Extract type from option
+                            match segments.arguments {
+                                PathArguments::AngleBracketed(a) => {
+                                    let x: GenericArgument = a.args.into_iter().collect::<Vec<_>>().remove(0);
+
+                                    match x {
+                                        GenericArgument::Type(t) => {
+                                            match t {
+                                                Type::Path(p) => {
+                                                    let x = Type::Path(p);
+
+                                                    (true, quote! { #x })
+                                                }
+                                                _ => panic!()
+                                            }
+                                        },
+                                        _ => panic!()
+                                    }
+                                }
+                                _ => panic!()
+                            }
+                        }
+                    }
+                    _ => panic!()
+                };
+
+                let
+                    (map_type, value_calculator): (_, Box<dyn
+                ValueCalculator>) = if prototype == "oneof" {
                     let mut oneofs = vec![];
-                    // TODO Not sure how to make ValueCalculator Clone because that gives weird errors
-                    let mut oneofs_2 = vec![];
 
                     for oneof in find_attr(field, "oneof") {
                         // For some reason, this loop does not work in calculate_values
                         let clone = oneof.clone();
                         oneofs.push(parse_macro_input!(clone as OneOfMapping));
-                        oneofs_2.push(parse_macro_input!(oneof as OneOfMapping));
                     }
 
                     let one_of_mapping = OneOfMapper {
                         mapping: oneofs,
-                        full_type: field.ty.clone()
-                    };
-                    let one_of_mapping_2 = OneOfMapper {
-                        mapping: oneofs_2,
-                        full_type: field.ty.clone()
                     };
 
-                    (Proto::Simple(&mut declarations, &mut check_opt_is_filled, &mut assign, Some(one_of_mapping)), Box::new(one_of_mapping_2))
+                    (MapType::OneOf, Box::new(one_of_mapping))
                 } else {
-                    (Proto::Simple(&mut declarations, &mut check_opt_is_filled, &mut assign, None), str_to_value_calculator(&prototype))
+                    let field_number = find_attr(field, "fieldnumber").remove(0);
+                    let field_number = parse_macro_input!(field_number as FieldNumber).0;
+
+                    (MapType::Simple(field_number), str_to_value_calculator(&prototype))
                 };
 
                 let calculator = Calculator {
-                    proto,
-                    field_number,
+                    map_type,
                     ident: &ident,
+                    is_option,
+                    type_without_opt,
+                    declaration: &mut declarations,
+                    opt_checks: &mut check_opt_is_filled,
+                    struct_gen: &mut assign,
                     deserializer: &mut deserializer,
                     compute_sizer: &mut compute_sizer,
                     os_writer: &mut os_writer,
@@ -97,7 +133,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 while !is.eof()? {
                     let (field_number, wire_type) = is.read_tag_unpack()?;
                     match field_number {
-                        #(#deserializer),*
+                        #(#deserializer)*
                         _ => {
                             debug_assert!(false, "number: {:#?}, wire_type: {:#?}", field_number, wire_type);
                             return ::protobuf::ProtobufResult::Err(::protobuf::ProtobufError::WireError(::protobuf::error::WireError::IncorrectVarint));
@@ -128,7 +164,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 }
             });
 
-            panic!("{:#?}", methods.remove(methods.len() - 1).to_string());
+//            panic!("{:#?}", methods.remove(methods.len() - 1).to_string());
 
             methods.push(quote! {
                 fn write_to_os(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
@@ -158,6 +194,8 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             #(#methods)*
         }
     };
+
+    //panic!("{:#?}", tokens.to_string());
 
     tokens.into()
 }

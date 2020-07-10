@@ -36,7 +36,6 @@ impl Parse for FieldNumber {
 
 pub struct OneOfMapper {
     pub mapping: Vec<OneOfMapping>,
-    pub full_type: Type
 }
 
 pub struct OneOfMapping {
