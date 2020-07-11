@@ -52,6 +52,9 @@ pub trait ValueCalculator {
     // a tokenstream rather than an ident because self. is not allowed in an ident
     fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
     fn write(&self, ident: &TokenStream, os_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
+    fn keyword_match_statement(&self) -> Option<TokenStream> {
+        None
+    }
     fn wire_check(&self) -> Option<TokenStream> {
         None
     }
@@ -206,10 +209,10 @@ impl OneOfMapper {
             let field_number = mapping.field_number;
             let enum_case = &mapping.enum_case;
             let gen = gen_ts(&mapping, &dummy_ident);
+            let keyword = mapping.proto_mapping.keyword_match_statement().unwrap_or(TokenStream::new());
 
-            conditioneel refje doen
             ts.push(quote! {
-               &#type_without_opt::#enum_case(#dummy_ident) => {
+               &#type_without_opt::#enum_case(#keyword #dummy_ident) => {
                    #gen
                }
             });
@@ -245,7 +248,7 @@ impl ValueCalculator for OneOfMapper {
 
     fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
         self.loop_through_cases(ident, type_without_opt,is_reference, |mapping, dummy_ident| {
-            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number, type_without_opt, false);
+            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number, type_without_opt, mapping.proto_mapping.keyword_match_statement().is_some());
 
             quote! {
                 #size
@@ -255,7 +258,7 @@ impl ValueCalculator for OneOfMapper {
 
     fn write(&self, ident: &TokenStream, os_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
         self.loop_through_cases(ident, type_without_opt, is_reference, |mapping, dummy_ident| {
-            let write = mapping.proto_mapping.write(dummy_ident, os_ident, mapping.field_number, type_without_opt, false);
+            let write = mapping.proto_mapping.write(dummy_ident, os_ident, mapping.field_number, type_without_opt, mapping.proto_mapping.keyword_match_statement().is_some());
 
             quote! {
                 #write
@@ -274,7 +277,9 @@ pub fn add_deref(is_reference: bool) -> TokenStream {
 }
 
 
-pub struct ProtobufMessage;
+pub struct ProtobufMessage {
+    pub(crate) tag_size: u32
+}
 
 impl ValueCalculator for ProtobufMessage {
     fn read(&self, ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
@@ -284,9 +289,11 @@ impl ValueCalculator for ProtobufMessage {
     }
 
     fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
+        let tag_size = self.tag_size;
+
         quote! {
             let len = #ident.compute_size() as u32;
-            #size_ident += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+            #size_ident += #tag_size + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
     }
 
@@ -295,6 +302,12 @@ impl ValueCalculator for ProtobufMessage {
         quote! {
             ::protobuf::rt::write_strict_message_field_with_cached_size(#field_number, #ts#ident, #os_ident)?;
         }
+    }
+
+    fn keyword_match_statement(&self) -> Option<TokenStream> {
+        Some(quote! {
+            ref
+        })
     }
 }
 
