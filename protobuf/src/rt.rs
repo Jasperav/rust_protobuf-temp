@@ -858,6 +858,17 @@ pub fn read_singular_proto3_bytes_into(
     }
 }
 
+pub fn read_singular_proto3_bytes(
+    wire_type: WireType,
+    is: &mut CodedInputStream,
+) -> ProtobufResult<Vec<u8>> {
+    let mut temp = vec![];
+
+    read_singular_proto3_bytes_into(wire_type, is, &mut temp)?;
+
+    Ok(temp)
+}
+
 /// Read singular `Bytes` field for proto3.
 #[cfg(feature = "bytes")]
 pub fn read_singular_proto3_carllerche_bytes_into(
