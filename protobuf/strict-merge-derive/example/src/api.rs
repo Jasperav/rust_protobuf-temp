@@ -77,4 +77,20 @@ pub struct Compound {
     #[tagsize = 10]
     #[fieldnumber = 23]
     pub vec_double_o_empty: ::std::vec::Vec<f64>,
+
+    #[prototype = "repeated"]
+    #[repeatedinner = "message"]
+    #[tagsize = 2]
+    #[fieldnumber = 24]
+    pub vec_message_default: ::std::vec::Vec<Inner>,
+    #[prototype = "repeated"]
+    #[repeatedinner = "message"]
+    #[tagsize = 2]
+    #[fieldnumber = 25]
+    pub vec_message_o_default: ::std::vec::Vec<Inner>,
+    #[prototype = "repeated"]
+    #[repeatedinner = "message"]
+    #[tagsize = 2]
+    #[fieldnumber = 26]
+    pub vec_message_o_empty: ::std::vec::Vec<Inner>,
 }

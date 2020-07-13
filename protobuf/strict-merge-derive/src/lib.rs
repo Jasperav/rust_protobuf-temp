@@ -4,15 +4,20 @@ use proc_macro2::{TokenStream, Punct, Literal};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
 use crate::matcher::{Proto, find_attr, str_to_value_calculator, MapType};
-use crate::parser::{Prototype, FieldNumber, OneOfMapping, OneOfMapper};
-use crate::value_calculator::{Calculator, ValueCalculator, ProtobufMessage, Repeated};
 use syn::punctuated::Punctuated;
 use std::cmp::Ordering;
+use crate::calculators::{ValueCalculator, Calculator};
+use crate::parser::{Prototype, FieldNumber};
+use crate::calculators::one_of::OneOfMapper;
+use crate::calculators::message::ProtobufMessage;
+use crate::calculators::repeated::Repeated;
 
+#[macro_use]
+extern crate quote;
 
 mod matcher;
 mod parser;
-mod value_calculator;
+mod calculators;
 
 #[proc_macro_derive(StrictMerge, attributes(prototype, fieldnumber, oneof, tagsize, repeatedinner))]
 pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -28,14 +33,35 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 unreachable!("All fields should be named");
             };
 
-            let mut declarations = vec![quote! {
-                processed_field_indexes = std::collections::HashSet::new()
-            }];
+            let mut declarations = vec![
+            //     quote! {
+            //     processed_field_indexes = std::collections::HashSet::new()
+            // }
+            ];
             let mut deserializer = vec![];
             let mut check_opt_is_filled = vec![];
             let mut assign = vec![];
             let mut compute_sizer = vec![];
             let mut os_writer = vec![];
+
+            let is_one_of = |field: &Field| {
+                let ts = find_attr(field, "prototype").remove(0);
+                let x = syn::parse::<Prototype>(ts).unwrap();
+
+                x.0.as_str() == "oneof"
+            };
+
+            // Make sure one-of's are processed as alst (just like in the protobuf standard implementation)
+            // Else the byte array is ordered differently and tests may fail
+            named_fields.sort_by(|a, b| {
+                if is_one_of(a) {
+                    Ordering::Greater
+                } else if is_one_of(b) {
+                    Ordering::Less
+                } else {
+                    Ordering::Equal
+                }
+            });
 
             let names = named_fields
                 .iter()
@@ -47,29 +73,6 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 .map(|f| f.to_string() + "_opt")
                 .map(|f| format_ident!("{}", f))
                 .collect::<Vec<_>>();
-
-            // // Make sure one-of's are processed as alst (just like in the protobuf standard implementation)
-            // // Else the byte array is ordered differently and tests may fail
-            // named_fields.sort_by(|a, b| {
-            //     // TODO: Really strange, but that parse_macro_input is weird, can't return the value so a lot of code duplication
-            //     let p = find_attr(a, "prototype").remove(0);
-            //
-            //     let a_is_one_of = parse_macro_input!(p as Prototype);
-            //     let a_is_one_of = a_is_one_of.0.as_str() == "oneof";;
-            //
-            //     let p = find_attr(b, "prototype").remove(0);
-            //     let b_is_one_of = parse_macro_input!(p as Prototype).0.as_str() == "oneof";
-            //
-            //     let ord = if a_is_one_of {
-            //         Ordering::Greater
-            //     } else if b_is_one_of {
-            //         Ordering::Less
-            //     } else {
-            //         Ordering::Equal
-            //     };
-            //
-            //     return ord;
-            // });
 
             for field in named_fields.iter() {
                 let p = || panic!("{:#?}", field);
@@ -120,7 +123,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     for oneof in find_attr(field, "oneof") {
                         // For some reason, this loop does not work in calculate_values
                         let clone = oneof.clone();
-                        oneofs.push(parse_macro_input!(clone as OneOfMapping));
+                        oneofs.push(parse_macro_input!(clone as crate::parser::OneOfMapping));
                     }
 
                     let one_of_mapping = OneOfMapper {
@@ -133,24 +136,28 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     let field_number = parse_macro_input!(field_number as FieldNumber).0;
                     let map_type = MapType::Simple(field_number);
 
-                    let mut tag_size_ts = find_attr(field, "tagsize");
-                    let tag_size = if tag_size_ts.is_empty() {
-                        None
-                    } else {
-                        let tag_size = tag_size_ts.remove(0);
+                    let calculate_tag_size = || {
+                        let tag_size_ts = find_attr(field, "tagsize").remove(0);
 
-                        parse_macro_input!(tag_size as FieldNumber).0
+                        syn::parse::<FieldNumber>(tag_size_ts).unwrap().0
                     };
 
                     if prototype.as_str() == "message" {
-                        (map_type, Box::new(ProtobufMessage { tag_size: tag_size.unwrap() }))
+                        (map_type, Box::new(ProtobufMessage { tag_size: calculate_tag_size() }))
                     } else if prototype.as_str() == "repeated" {
                         let repeated_inner_ts = find_attr(field, "repeatedinner").remove(0);
                         let repeated_inner = parse_macro_input!(repeated_inner_ts as Prototype).0;
-                        let inner_calculator = str_to_value_calculator(repeated_inner.as_str());
+                        let inner_calculator = if repeated_inner.as_str() == "message" {
+                                Box::new(ProtobufMessage {
+                                    tag_size: calculate_tag_size()
+                                })
+                            } else {
+                                str_to_value_calculator(repeated_inner.as_str())
+                            };
 
                         (map_type, Box::new(Repeated {
-                            inner_calculator
+                            inner_calculator,
+                            tag_size: calculate_tag_size()
                         }))
                     } else {
                         (map_type, str_to_value_calculator(&prototype))
