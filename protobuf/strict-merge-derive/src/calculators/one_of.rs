@@ -59,9 +59,9 @@ impl ValueCalculator for OneOfMapper {
         (Assign::Set, ts)
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool, tag_size: u32) -> TokenStream {
         self.loop_through_cases(ident, type_without_opt, is_reference, |mapping, dummy_ident| {
-            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number, type_without_opt, mapping.proto_mapping.keyword_match_statement().is_some());
+            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number, type_without_opt, mapping.proto_mapping.keyword_match_statement().is_some(), mapping.tag_size);
 
             quote! {
                 #size

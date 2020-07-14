@@ -65,11 +65,11 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
             let names = named_fields
                 .iter()
-                .map(|f| f.ident.clone().unwrap())
+                .map(|f| f.ident.clone().expect("No ident on field"))
                 .collect::<Vec<_>>();
             let names_opt = named_fields
                 .iter()
-                .map(|f| f.ident.clone().unwrap())
+                .map(|f| f.ident.clone().expect("No ident on field"))
                 .map(|f| f.to_string() + "_opt")
                 .map(|f| format_ident!("{}", f))
                 .collect::<Vec<_>>();
@@ -77,9 +77,13 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             for field in named_fields.iter() {
                 let p = || panic!("{:#?}", field);
 
+                eprintln!("{}", field.ident.clone().unwrap().to_string());
+
                 let prototype = find_attr(field, "prototype").remove(0);
                 let prototype = parse_macro_input!(prototype as Prototype).0;
                 let ident = field.ident.clone().unwrap();
+                let tag_size = find_attr(field, "tagsize").remove(0);
+                let tag_size = syn::parse::<FieldNumber>(tag_size).expect("No tag size on field").0;
 
                 let (is_option, type_without_opt) = match field.ty.clone() {
                     Type::Path(p) => {
@@ -136,35 +140,12 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     let field_number = parse_macro_input!(field_number as FieldNumber).0;
                     let map_type = MapType::Simple(field_number);
 
-                    let calculate_tag_size = || {
-                        let tag_size_ts = find_attr(field, "tagsize").remove(0);
-
-                        syn::parse::<FieldNumber>(tag_size_ts).unwrap().0
-                    };
-
-                    if prototype.as_str() == "message" {
-                        (map_type, Box::new(ProtobufMessage { tag_size: calculate_tag_size() }))
-                    } else if prototype.as_str() == "repeated" {
+                    if prototype.as_str() == "repeated" {
                         let repeated_inner_ts = find_attr(field, "repeatedinner").remove(0);
                         let repeated_inner = parse_macro_input!(repeated_inner_ts as Prototype).0;
-                        let inner_calculator = if repeated_inner.as_str() == "message" {
-                                Box::new(ProtobufMessage {
-                                    tag_size: calculate_tag_size()
-                                })
-                            } else {
-                                str_to_value_calculator(repeated_inner.as_str())
-                            };
-
-                        let mut tag_size = find_attr(field, "tagsize");
-                        let tag_size = if tag_size.len() == 1 {
-                            Some(syn::parse::<FieldNumber>(tag_size.remove(0)).unwrap().0)
-                        } else {
-                            None
-                        };
 
                         (map_type, Box::new(Repeated {
-                            inner_calculator,
-                            tag_size
+                            inner_calculator:  str_to_value_calculator(repeated_inner.as_str())
                         }))
                     } else {
                         (map_type, str_to_value_calculator(&prototype))
@@ -176,6 +157,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     ident: &ident,
                     is_option,
                     type_without_opt,
+                    tag_size,
                     declaration: &mut declarations,
                     opt_checks: &mut check_opt_is_filled,
                     struct_gen: &mut assign,

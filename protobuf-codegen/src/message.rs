@@ -597,6 +597,21 @@ impl<'a> MessageGen<'a> {
                         false => Visibility::Default,
                     };
                     w.write_line("#[prototype = \"oneof\"]");
+
+                    for variant in &oneof.variants_except_group() {
+                        let mut attributes = vec![];
+                        let prototype = protobuf_name(variant.field.proto_type);
+
+                        attributes.push(variant.field.rust_name.get().to_string());
+                        attributes.push(prototype.to_string());
+                        attributes.push(variant.field.proto_field.number().to_string());
+                        attributes.push(variant.field.tag_size().to_string());
+
+                        let attributes: String = attributes.join("|");
+
+                        w.write_line(&format!("#[oneof = \"{}\"]", attributes));
+                    }
+
                     w.field_decl_vis(
                         vis,
                         &oneof.oneof.field_name().to_string(),

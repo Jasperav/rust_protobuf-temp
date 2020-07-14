@@ -38,6 +38,13 @@ pub struct OneOfMapping {
     pub enum_case: Ident,
     pub proto_mapping: Box<dyn ValueCalculator>,
     pub field_number: u32,
+    pub tag_size: u32
+}
+
+fn find_next(s: &str) -> (String, String) {
+    let (first, second) = s.split_at(s.find("|").unwrap() + 1);
+
+    (first.replace("|", ""), second.to_string())
 }
 
 impl Parse for OneOfMapping {
@@ -46,26 +53,17 @@ impl Parse for OneOfMapping {
         Punct::parse(&input)?;
 
         let info = parse_literal(input)?;
-        let (name, info) = info.split_at(info.find("|").unwrap() + 1);
-        let (prototype, field_number) = info.split_at(info.find("|").unwrap() + 1);
-        let mut field_number = field_number.to_string();
-        let prototype = prototype.replace("|", "");
+        let (name, info) = find_next(&info);
+        let (prototype, info) = find_next(&info);
+        let (field_number, tag_size) = find_next(&info);
 
-        let proto_mapping = if prototype.as_str() == "message" {
-            let (field_nr, tag_size) = field_number.split_at(field_number.find("|").unwrap() + 1);
-            let tag_size: u32 = tag_size.parse().unwrap();
-
-            field_number = field_nr.replace("|", "");
-
-            Box::new(ProtobufMessage { tag_size })
-        } else {
-            str_to_value_calculator(&prototype)
-        };
+        let proto_mapping = str_to_value_calculator(&prototype);
 
         Ok(OneOfMapping {
-            enum_case: format_ident!("{}", name.replace("|", "")),
+            enum_case: format_ident!("{}", name),
             proto_mapping,
             field_number: field_number.parse().unwrap(),
+            tag_size: tag_size.parse().unwrap()
         })
     }
 }

@@ -693,7 +693,7 @@ impl<'a> FieldGen<'a> {
             .get_file_and_mod(self.customize.clone())
     }
 
-    fn tag_size(&self) -> u32 {
+    pub fn tag_size(&self) -> u32 {
         rt::tag_size(self.proto_field.number())
     }
 
@@ -1215,7 +1215,23 @@ impl<'a> FieldGen<'a> {
             self.write_serde_attr(w);
 
             if self.customize.strict_values.unwrap_or(false) {
-                w.write_line(format!("#[prototype = \"{}\"]", protobuf_name(self.proto_type)));
+                let prototype = protobuf_name(self.proto_type);
+
+                let prototype = match &self.kind {
+                    FieldKind::Repeated(_) => {
+                        w.write_line(format!("#[repeatedinner = \"{}\"]", prototype));
+
+                        if prototype != "enum" {
+                            // Enum does not use the tagsize
+                            w.write_line(format!("#[tagsize = \"{}\"]", self.tag_size()));
+                        }
+
+                        "vec"
+                    },
+                    _ => prototype,
+                };
+
+                w.write_line(format!("#[prototype = \"{}\"]", prototype));
                 w.write_line(format!("#[fieldnumber = {}]", self.proto_field.number()));
             }
 
@@ -1734,19 +1750,11 @@ impl<'a> FieldGen<'a> {
     fn write_merge_from_oneof(&self, o: &OneofField, wire_type_var: &str, w: &mut CodeWriter, c: &Customize) {
         self.write_assert_wire_type(wire_type_var, w);
 
-        let value = if c.strict_enums.unwrap_or(false) && &self.proto_type == &field_descriptor_proto::Type::TYPE_ENUM {
-            format!(
-                "is.read_enum()?",
-            )
-        } else {
-            format!(
+        let typed = RustValueTyped {
+            value: format!(
                 "{}?",
                 self.proto_type.read("is", o.elem.primitive_type_variant())
-            )
-        };
-
-        let typed = RustValueTyped {
-            value,
+            ),
             rust_type: self.full_storage_iter_elem_type(
                 &self
                     .proto_field
@@ -1808,19 +1816,11 @@ impl<'a> FieldGen<'a> {
             }
             _ => {
                 self.write_assert_wire_type(wire_type_var, w);
-
-                let value = if c.strict_enums.unwrap_or(false) && &self.proto_type == &field_descriptor_proto::Type::TYPE_ENUM {
-                    format!(
-                        "is.read_enum()?",
-                    )
-                } else {
-                    format!(
-                        "{}?",
-                        self.proto_type.read("is", s.elem.primitive_type_variant())
-                    )
-                };
-
-                self.write_self_field_assign_some(w, s, &value);
+                let read_proc = format!(
+                    "{}?",
+                    self.proto_type.read("is", s.elem.primitive_type_variant())
+                );
+                self.write_self_field_assign_some(w, s, &read_proc);
             }
         }
     }
