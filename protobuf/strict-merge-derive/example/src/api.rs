@@ -57,40 +57,36 @@ pub struct Compound {
     pub bytes_default: ::std::vec::Vec<u8>,
     #[prototype = "u8"]
     #[fieldnumber = 19]
-    pub bytes_o_default: ::std::vec::Vec<u8>,
-    #[prototype = "u8"]
-    #[fieldnumber = 20]
     pub bytes_o_empty: ::std::vec::Vec<u8>,
 
     #[prototype = "repeated"]
     #[repeatedinner = "double"]
     #[tagsize = 10]
-    #[fieldnumber = 21]
+    #[fieldnumber = 20]
     pub vec_double_default: ::std::vec::Vec<f64>,
     #[prototype = "repeated"]
     #[repeatedinner = "double"]
     #[tagsize = 10]
-    #[fieldnumber = 22]
-    pub vec_double_o_default: ::std::vec::Vec<f64>,
-    #[prototype = "repeated"]
-    #[repeatedinner = "double"]
-    #[tagsize = 10]
-    #[fieldnumber = 23]
+    #[fieldnumber = 21]
     pub vec_double_o_empty: ::std::vec::Vec<f64>,
 
     #[prototype = "repeated"]
     #[repeatedinner = "message"]
     #[tagsize = 2]
-    #[fieldnumber = 24]
+    #[fieldnumber = 22]
     pub vec_message_default: ::std::vec::Vec<Inner>,
     #[prototype = "repeated"]
     #[repeatedinner = "message"]
     #[tagsize = 2]
-    #[fieldnumber = 25]
-    pub vec_message_o_default: ::std::vec::Vec<Inner>,
-    #[prototype = "repeated"]
-    #[repeatedinner = "message"]
-    #[tagsize = 2]
-    #[fieldnumber = 26]
+    #[fieldnumber = 23]
     pub vec_message_o_empty: ::std::vec::Vec<Inner>,
+
+    #[prototype = "repeated"]
+    #[repeatedinner = "enum"]
+    #[fieldnumber = 24]
+    pub vec_enum_default: ::std::vec::Vec<crate::other_messages::AnEnum>,
+    #[prototype = "repeated"]
+    #[repeatedinner = "enum"]
+    #[fieldnumber = 25]
+    pub vec_enum_o_empty: ::std::vec::Vec<crate::other_messages::AnEnum>,
 }

@@ -34,6 +34,16 @@ impl ValueCalculator for ProtobufEnum {
     }
 
     fn read_repeated(&self) -> (RepeatedComputer, TokenStream) {
-        unreachable!()
+        (RepeatedComputer::Custom(Box::new(|rcs| {
+            let field_number = rcs.field_number;
+            let size_ident = rcs.size_ident;
+            let loop_variable = rcs.loop_variable;
+
+            quote! {
+                #size_ident += ::protobuf::rt::enum_size_strict(#field_number, *#loop_variable);
+            }
+        })), quote! {
+            read_repeated_enum_strict_into_vec
+        })
     }
 }

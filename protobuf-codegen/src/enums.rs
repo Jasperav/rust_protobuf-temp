@@ -130,7 +130,7 @@ impl<'a> EnumGen<'a> {
         w.write_line("");
         self.write_impl_default(w);
         w.write_line("");
-        self.write_impl_value(w);
+        self.write_impl_value(w, customize);
     }
 
     fn write_enum(&self, w: &mut CodeWriter, customize: &Customize) {
@@ -252,7 +252,10 @@ impl<'a> EnumGen<'a> {
         );
     }
 
-    fn write_impl_value(&self, w: &mut CodeWriter) {
+    fn write_impl_value(&self, w: &mut CodeWriter, c: &Customize) {
+        if c.strict_values.unwrap_or(false) {
+            return;
+        }
         w.impl_for_block(
             &format!(
                 "{}::reflect::ProtobufValue",

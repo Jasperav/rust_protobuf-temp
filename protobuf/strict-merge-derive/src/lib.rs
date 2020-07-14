@@ -155,9 +155,16 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                 str_to_value_calculator(repeated_inner.as_str())
                             };
 
+                        let mut tag_size = find_attr(field, "tagsize");
+                        let tag_size = if tag_size.len() == 1 {
+                            Some(syn::parse::<FieldNumber>(tag_size.remove(0)).unwrap().0)
+                        } else {
+                            None
+                        };
+
                         (map_type, Box::new(Repeated {
                             inner_calculator,
-                            tag_size: calculate_tag_size()
+                            tag_size
                         }))
                     } else {
                         (map_type, str_to_value_calculator(&prototype))

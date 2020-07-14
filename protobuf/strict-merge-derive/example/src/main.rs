@@ -33,16 +33,14 @@ fn main() {
         one_of_enum: OneOfSomething::_enum(AnEnum::ACase),
         one_of_message: OneOfSomething::message(first_inner.clone()),
         bytes_default: vec![1, 2],
-        bytes_o_default: vec![1, 2],
         bytes_o_empty: vec![],
         vec_double_default: vec![1 as f64, 2 as f64],
-        vec_double_o_default: vec![1 as f64, 2 as f64],
         vec_double_o_empty: vec![],
         vec_message_default: vec![first_inner.clone(), second_inner.clone()],
-        vec_message_o_default: vec![first_inner.clone(), second_inner.clone()],
         vec_message_o_empty: vec![],
+        vec_enum_default: vec![AnEnum::ACase, AnEnum::AnotherCase],
+        vec_enum_o_empty: vec![]
     };
-
     let first_inner = org_message::Inner {
         double_default: 1 as f64,
         unknown_fields: Default::default(),
@@ -66,17 +64,13 @@ fn main() {
         one_of_enum: Some(One_of_enum::an_enum_1(ProtobufEnumOrUnknown::new(org_message::AnEnum::A_CASE))),
         one_of_message: Some(One_of_message::a_message_2(first_inner.clone())),
         bytes_default: vec![1, 2],
-        bytes_o_default: vec![1, 2],
         bytes_o_empty: vec![],
         vec_double_default: vec![1 as f64, 2 as f64],
-        vec_double_o_default: vec![1 as f64, 2 as f64],
         vec_double_o_empty: vec![],
         vec_message_default: vec![first_inner.clone(), second_inner.clone()],
-        vec_message_o_default: vec![first_inner.clone(), second_inner.clone()],
         vec_message_o_empty: vec![],
-        // vec_enum_default: vec![ProtobufEnumOrUnknown::new(AnEnum::A_CASE), ProtobufEnumOrUnknown::new(AnEnum::ANOTHER_CASE)],
-        // vec_enum_o_default: vec![ProtobufEnumOrUnknown::new(AnEnum::A_CASE), ProtobufEnumOrUnknown::new(AnEnum::ANOTHER_CASE)],
-        // vec_enum_o_empty: vec![],
+        vec_enum_default: vec![ProtobufEnumOrUnknown::new(org_message::AnEnum::A_CASE), ProtobufEnumOrUnknown::new(org_message::AnEnum::ANOTHER_CASE)],
+        vec_enum_o_empty: vec![],
         unknown_fields: Default::default(),
         cached_size: Default::default()
     };
@@ -98,17 +92,4 @@ fn main() {
 
     assert_eq!(old_to_new_deserialized, new);
     assert_eq!(new_to_old_deserialized, old);
-    // double: 1.,
-    // double_default: 0.0,
-    // _u32: 1,
-    // _u32_default: 0,
-    // sfixed64: 1,
-    // sfixed64_default: 0,
-    // string: "1".to_string(),
-    // string_default: "".to_string(),
-    // uuid: uuid::Uuid::new_v4(),
-    // bytes: vec![1],
-    // bytes_default: vec![]
-    //
-
 }
