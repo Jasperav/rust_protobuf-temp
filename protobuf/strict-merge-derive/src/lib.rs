@@ -77,8 +77,6 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             for field in named_fields.iter() {
                 let p = || panic!("{:#?}", field);
 
-                eprintln!("{}", field.ident.clone().unwrap().to_string());
-
                 let prototype = find_attr(field, "prototype").remove(0);
                 let prototype = parse_macro_input!(prototype as Prototype).0;
                 let ident = field.ident.clone().unwrap();
