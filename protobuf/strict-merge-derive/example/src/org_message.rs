@@ -19,7 +19,7 @@
 #![allow(unused_imports)]
 #![allow(unused_results)]
 
-//! Generated file from `org_message.proto`
+//! Generated file from `strict_merge_tests.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -36,9 +36,6 @@ pub struct Compound {
     pub message_default: ::std::option::Option<Inner>,
     pub message_o_default: ::std::option::Option<Inner>,
     pub message_o_empty: ::std::option::Option<Inner>,
-    pub bytes_default: ::std::vec::Vec<u8>,
-    pub bytes_o_default: ::std::vec::Vec<u8>,
-    pub bytes_o_empty: ::std::vec::Vec<u8>,
     // message oneof groups
     pub one_of_double: ::std::option::Option<compound::One_of_double>,
     pub one_of_enum: ::std::option::Option<compound::One_of_enum>,
@@ -59,7 +56,7 @@ impl Compound {
         ::std::default::Default::default()
     }
 
-    // double a_double_0 = 9;
+    // double a_double_0 = 6;
 
     pub fn get_a_double_0(&self) -> f64 {
         match self.one_of_double {
@@ -84,7 +81,7 @@ impl Compound {
         self.one_of_double = ::std::option::Option::Some(compound::One_of_double::a_double_0(v))
     }
 
-    // .benji.infra.req.AnEnum an_enum_0 = 10;
+    // .benji.infra.req.AnEnum an_enum_0 = 7;
 
     pub fn get_an_enum_0(&self) -> AnEnum {
         match self.one_of_double {
@@ -109,7 +106,7 @@ impl Compound {
         self.one_of_double = ::std::option::Option::Some(compound::One_of_double::an_enum_0(::protobuf::ProtobufEnumOrUnknown::new(v)))
     }
 
-    // .benji.infra.req.Inner a_message_0 = 11;
+    // .benji.infra.req.Inner a_message_0 = 8;
 
     pub fn get_a_message_0(&self) -> &Inner {
         match self.one_of_double {
@@ -158,7 +155,7 @@ impl Compound {
         }
     }
 
-    // double a_double_1 = 12;
+    // double a_double_1 = 9;
 
     pub fn get_a_double_1(&self) -> f64 {
         match self.one_of_enum {
@@ -183,7 +180,7 @@ impl Compound {
         self.one_of_enum = ::std::option::Option::Some(compound::One_of_enum::a_double_1(v))
     }
 
-    // .benji.infra.req.AnEnum an_enum_1 = 13;
+    // .benji.infra.req.AnEnum an_enum_1 = 10;
 
     pub fn get_an_enum_1(&self) -> AnEnum {
         match self.one_of_enum {
@@ -208,7 +205,7 @@ impl Compound {
         self.one_of_enum = ::std::option::Option::Some(compound::One_of_enum::an_enum_1(::protobuf::ProtobufEnumOrUnknown::new(v)))
     }
 
-    // .benji.infra.req.Inner a_message_1 = 14;
+    // .benji.infra.req.Inner a_message_1 = 11;
 
     pub fn get_a_message_1(&self) -> &Inner {
         match self.one_of_enum {
@@ -257,7 +254,7 @@ impl Compound {
         }
     }
 
-    // double a_double_2 = 15;
+    // double a_double_2 = 12;
 
     pub fn get_a_double_2(&self) -> f64 {
         match self.one_of_message {
@@ -282,7 +279,7 @@ impl Compound {
         self.one_of_message = ::std::option::Option::Some(compound::One_of_message::a_double_2(v))
     }
 
-    // .benji.infra.req.AnEnum an_enum_2 = 16;
+    // .benji.infra.req.AnEnum an_enum_2 = 13;
 
     pub fn get_an_enum_2(&self) -> AnEnum {
         match self.one_of_message {
@@ -307,7 +304,7 @@ impl Compound {
         self.one_of_message = ::std::option::Option::Some(compound::One_of_message::an_enum_2(::protobuf::ProtobufEnumOrUnknown::new(v)))
     }
 
-    // .benji.infra.req.Inner a_message_2 = 17;
+    // .benji.infra.req.Inner a_message_2 = 14;
 
     pub fn get_a_message_2(&self) -> &Inner {
         match self.one_of_message {
@@ -359,21 +356,6 @@ impl Compound {
 
 impl ::protobuf::Message for Compound {
     fn is_initialized(&self) -> bool {
-        for v in &self.message_default {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        for v in &self.message_o_default {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        for v in &self.message_o_empty {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         if let Some(compound::One_of_double::a_message_0(ref v)) = self.one_of_double {
             if !v.is_initialized() {
                 return false;
@@ -389,6 +371,21 @@ impl ::protobuf::Message for Compound {
                 return false;
             }
         }
+        for v in &self.message_default {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.message_o_default {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.message_o_empty {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -427,76 +424,67 @@ impl ::protobuf::Message for Compound {
                     self.enum_o_empty = is.read_enum_or_unknown()?;
                 },
                 6 => {
-                    ::protobuf::rt::read_singular_message_into::<Inner, _>(wire_type, is, &mut self.message_default)?;
-                },
-                7 => {
-                    ::protobuf::rt::read_singular_message_into::<Inner, _>(wire_type, is, &mut self.message_o_default)?;
-                },
-                8 => {
-                    ::protobuf::rt::read_singular_message_into::<Inner, _>(wire_type, is, &mut self.message_o_empty)?;
-                },
-                9 => {
                     if wire_type != ::protobuf::wire_format::WireTypeFixed64 {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_double = ::std::option::Option::Some(compound::One_of_double::a_double_0(is.read_double()?));
                 },
-                10 => {
+                7 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_double = ::std::option::Option::Some(compound::One_of_double::an_enum_0(is.read_enum_or_unknown()?));
                 },
-                11 => {
+                8 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_double = ::std::option::Option::Some(compound::One_of_double::a_message_0(is.read_message()?));
                 },
-                12 => {
+                9 => {
                     if wire_type != ::protobuf::wire_format::WireTypeFixed64 {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_enum = ::std::option::Option::Some(compound::One_of_enum::a_double_1(is.read_double()?));
                 },
-                13 => {
+                10 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_enum = ::std::option::Option::Some(compound::One_of_enum::an_enum_1(is.read_enum_or_unknown()?));
                 },
-                14 => {
+                11 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_enum = ::std::option::Option::Some(compound::One_of_enum::a_message_1(is.read_message()?));
                 },
-                15 => {
+                12 => {
                     if wire_type != ::protobuf::wire_format::WireTypeFixed64 {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_message = ::std::option::Option::Some(compound::One_of_message::a_double_2(is.read_double()?));
                 },
-                16 => {
+                13 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_message = ::std::option::Option::Some(compound::One_of_message::an_enum_2(is.read_enum_or_unknown()?));
                 },
-                17 => {
+                14 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     self.one_of_message = ::std::option::Option::Some(compound::One_of_message::a_message_2(is.read_message()?));
                 },
-                18 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.bytes_default)?;
+                15 => {
+                    ::protobuf::rt::read_singular_message_into::<Inner, _>(wire_type, is, &mut self.message_default)?;
                 },
-                19 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.bytes_o_default)?;
+                16 => {
+                    ::protobuf::rt::read_singular_message_into::<Inner, _>(wire_type, is, &mut self.message_o_default)?;
                 },
-                20 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.bytes_o_empty)?;
+                17 => {
+                    ::protobuf::rt::read_singular_message_into::<Inner, _>(wire_type, is, &mut self.message_o_empty)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -531,20 +519,11 @@ impl ::protobuf::Message for Compound {
         }
         if let Some(v) = self.message_o_default.as_ref() {
             let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+            my_size += 2 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
         if let Some(v) = self.message_o_empty.as_ref() {
             let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        }
-        if !self.bytes_default.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(18, &self.bytes_default);
-        }
-        if !self.bytes_o_default.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(19, &self.bytes_o_default);
-        }
-        if !self.bytes_o_empty.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(20, &self.bytes_o_empty);
+            my_size += 2 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
         if let ::std::option::Option::Some(ref v) = self.one_of_double {
             match v {
@@ -552,7 +531,7 @@ impl ::protobuf::Message for Compound {
                     my_size += 9;
                 },
                 &compound::One_of_double::an_enum_0(v) => {
-                    my_size += ::protobuf::rt::enum_or_unknown_size(10, v);
+                    my_size += ::protobuf::rt::enum_or_unknown_size(7, v);
                 },
                 &compound::One_of_double::a_message_0(ref v) => {
                     let len = v.compute_size();
@@ -566,7 +545,7 @@ impl ::protobuf::Message for Compound {
                     my_size += 9;
                 },
                 &compound::One_of_enum::an_enum_1(v) => {
-                    my_size += ::protobuf::rt::enum_or_unknown_size(13, v);
+                    my_size += ::protobuf::rt::enum_or_unknown_size(10, v);
                 },
                 &compound::One_of_enum::a_message_1(ref v) => {
                     let len = v.compute_size();
@@ -580,11 +559,11 @@ impl ::protobuf::Message for Compound {
                     my_size += 9;
                 },
                 &compound::One_of_message::an_enum_2(v) => {
-                    my_size += ::protobuf::rt::enum_or_unknown_size(16, v);
+                    my_size += ::protobuf::rt::enum_or_unknown_size(13, v);
                 },
                 &compound::One_of_message::a_message_2(ref v) => {
                     let len = v.compute_size();
-                    my_size += 2 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
                 },
             };
         }
@@ -610,59 +589,50 @@ impl ::protobuf::Message for Compound {
             os.write_enum(5, ::protobuf::ProtobufEnumOrUnknown::value(&self.enum_o_empty))?;
         }
         if let Some(v) = self.message_default.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(6, v, os)?;
+            ::protobuf::rt::write_message_field_with_cached_size(15, v, os)?;
         }
         if let Some(v) = self.message_o_default.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(7, v, os)?;
+            ::protobuf::rt::write_message_field_with_cached_size(16, v, os)?;
         }
         if let Some(v) = self.message_o_empty.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(8, v, os)?;
-        }
-        if !self.bytes_default.is_empty() {
-            os.write_bytes(18, &self.bytes_default)?;
-        }
-        if !self.bytes_o_default.is_empty() {
-            os.write_bytes(19, &self.bytes_o_default)?;
-        }
-        if !self.bytes_o_empty.is_empty() {
-            os.write_bytes(20, &self.bytes_o_empty)?;
+            ::protobuf::rt::write_message_field_with_cached_size(17, v, os)?;
         }
         if let ::std::option::Option::Some(ref v) = self.one_of_double {
             match v {
                 &compound::One_of_double::a_double_0(v) => {
-                    os.write_double(9, v)?;
+                    os.write_double(6, v)?;
                 },
                 &compound::One_of_double::an_enum_0(v) => {
-                    os.write_enum(10, ::protobuf::ProtobufEnumOrUnknown::value(&v))?;
+                    os.write_enum(7, ::protobuf::ProtobufEnumOrUnknown::value(&v))?;
                 },
                 &compound::One_of_double::a_message_0(ref v) => {
-                    ::protobuf::rt::write_message_field_with_cached_size(11, v, os)?;
+                    ::protobuf::rt::write_message_field_with_cached_size(8, v, os)?;
                 },
             };
         }
         if let ::std::option::Option::Some(ref v) = self.one_of_enum {
             match v {
                 &compound::One_of_enum::a_double_1(v) => {
-                    os.write_double(12, v)?;
+                    os.write_double(9, v)?;
                 },
                 &compound::One_of_enum::an_enum_1(v) => {
-                    os.write_enum(13, ::protobuf::ProtobufEnumOrUnknown::value(&v))?;
+                    os.write_enum(10, ::protobuf::ProtobufEnumOrUnknown::value(&v))?;
                 },
                 &compound::One_of_enum::a_message_1(ref v) => {
-                    ::protobuf::rt::write_message_field_with_cached_size(14, v, os)?;
+                    ::protobuf::rt::write_message_field_with_cached_size(11, v, os)?;
                 },
             };
         }
         if let ::std::option::Option::Some(ref v) = self.one_of_message {
             match v {
                 &compound::One_of_message::a_double_2(v) => {
-                    os.write_double(15, v)?;
+                    os.write_double(12, v)?;
                 },
                 &compound::One_of_message::an_enum_2(v) => {
-                    os.write_enum(16, ::protobuf::ProtobufEnumOrUnknown::value(&v))?;
+                    os.write_enum(13, ::protobuf::ProtobufEnumOrUnknown::value(&v))?;
                 },
                 &compound::One_of_message::a_message_2(ref v) => {
-                    ::protobuf::rt::write_message_field_with_cached_size(17, v, os)?;
+                    ::protobuf::rt::write_message_field_with_cached_size(14, v, os)?;
                 },
             };
         }
@@ -718,21 +688,6 @@ impl ::protobuf::Message for Compound {
                 "enum_o_empty",
                 |m: &Compound| { &m.enum_o_empty },
                 |m: &mut Compound| { &mut m.enum_o_empty },
-            ));
-            fields.push(::protobuf::reflect::rt::make_option_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>, _>(
-                "message_default",
-                |m: &Compound| { &m.message_default },
-                |m: &mut Compound| { &mut m.message_default },
-            ));
-            fields.push(::protobuf::reflect::rt::make_option_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>, _>(
-                "message_o_default",
-                |m: &Compound| { &m.message_o_default },
-                |m: &mut Compound| { &mut m.message_o_default },
-            ));
-            fields.push(::protobuf::reflect::rt::make_option_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>, _>(
-                "message_o_empty",
-                |m: &Compound| { &m.message_o_empty },
-                |m: &mut Compound| { &mut m.message_o_empty },
             ));
             fields.push(::protobuf::reflect::rt::make_oneof_copy_has_get_set_accessors::<_, ::protobuf::reflect::types::ProtobufTypeDouble>(
                 "a_double_0",
@@ -791,20 +746,20 @@ impl ::protobuf::Message for Compound {
                 Compound::mut_a_message_2,
                 Compound::set_a_message_2,
             ));
-            fields.push(::protobuf::reflect::rt::make_simple_field_accessor::<_, ::protobuf::reflect::types::ProtobufTypeBytes>(
-                "bytes_default",
-                |m: &Compound| { &m.bytes_default },
-                |m: &mut Compound| { &mut m.bytes_default },
+            fields.push(::protobuf::reflect::rt::make_option_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>, _>(
+                "message_default",
+                |m: &Compound| { &m.message_default },
+                |m: &mut Compound| { &mut m.message_default },
             ));
-            fields.push(::protobuf::reflect::rt::make_simple_field_accessor::<_, ::protobuf::reflect::types::ProtobufTypeBytes>(
-                "bytes_o_default",
-                |m: &Compound| { &m.bytes_o_default },
-                |m: &mut Compound| { &mut m.bytes_o_default },
+            fields.push(::protobuf::reflect::rt::make_option_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>, _>(
+                "message_o_default",
+                |m: &Compound| { &m.message_o_default },
+                |m: &mut Compound| { &mut m.message_o_default },
             ));
-            fields.push(::protobuf::reflect::rt::make_simple_field_accessor::<_, ::protobuf::reflect::types::ProtobufTypeBytes>(
-                "bytes_o_empty",
-                |m: &Compound| { &m.bytes_o_empty },
-                |m: &mut Compound| { &mut m.bytes_o_empty },
+            fields.push(::protobuf::reflect::rt::make_option_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>, _>(
+                "message_o_empty",
+                |m: &Compound| { &m.message_o_empty },
+                |m: &mut Compound| { &mut m.message_o_empty },
             ));
             ::protobuf::reflect::MessageDescriptor::new::<Compound>(
                 "Compound",
@@ -827,21 +782,18 @@ impl ::protobuf::Clear for Compound {
         self.enum_default = ::protobuf::ProtobufEnumOrUnknown::new(AnEnum::NOT_SET);
         self.enum_o_default = ::protobuf::ProtobufEnumOrUnknown::new(AnEnum::NOT_SET);
         self.enum_o_empty = ::protobuf::ProtobufEnumOrUnknown::new(AnEnum::NOT_SET);
+        self.one_of_double = ::std::option::Option::None;
+        self.one_of_double = ::std::option::Option::None;
+        self.one_of_double = ::std::option::Option::None;
+        self.one_of_enum = ::std::option::Option::None;
+        self.one_of_enum = ::std::option::Option::None;
+        self.one_of_enum = ::std::option::Option::None;
+        self.one_of_message = ::std::option::Option::None;
+        self.one_of_message = ::std::option::Option::None;
+        self.one_of_message = ::std::option::Option::None;
         self.message_default = ::std::option::Option::None;
         self.message_o_default = ::std::option::Option::None;
         self.message_o_empty = ::std::option::Option::None;
-        self.one_of_double = ::std::option::Option::None;
-        self.one_of_double = ::std::option::Option::None;
-        self.one_of_double = ::std::option::Option::None;
-        self.one_of_enum = ::std::option::Option::None;
-        self.one_of_enum = ::std::option::Option::None;
-        self.one_of_enum = ::std::option::Option::None;
-        self.one_of_message = ::std::option::Option::None;
-        self.one_of_message = ::std::option::Option::None;
-        self.one_of_message = ::std::option::Option::None;
-        self.bytes_default.clear();
-        self.bytes_o_default.clear();
-        self.bytes_o_empty.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1016,7 +968,6 @@ impl ::protobuf::reflect::ProtobufValue for Inner {
 pub enum AnEnum {
     NOT_SET = 0,
     A_CASE = 1,
-    ANOTHER_CASE = 2,
 }
 
 impl ::protobuf::ProtobufEnum for AnEnum {
@@ -1028,7 +979,6 @@ impl ::protobuf::ProtobufEnum for AnEnum {
         match value {
             0 => ::std::option::Option::Some(AnEnum::NOT_SET),
             1 => ::std::option::Option::Some(AnEnum::A_CASE),
-            2 => ::std::option::Option::Some(AnEnum::ANOTHER_CASE),
             _ => ::std::option::Option::None
         }
     }
@@ -1037,7 +987,6 @@ impl ::protobuf::ProtobufEnum for AnEnum {
         static values: &'static [AnEnum] = &[
             AnEnum::NOT_SET,
             AnEnum::A_CASE,
-            AnEnum::ANOTHER_CASE,
         ];
         values
     }
@@ -1060,33 +1009,30 @@ impl ::protobuf::reflect::ProtobufValue for AnEnum {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x11org_message.proto\x12\x0fbenji.infra.req\"\xb0\x08\n\x08Compound\
-    \x12%\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault\x12,\n\
-    \x12double_non_default\x18\x02\x20\x01(\x01R\x10doubleNonDefault\x12:\n\
-    \x0cenum_default\x18\x03\x20\x01(\x0e2\x17.benji.infra.req.AnEnumR\x0ben\
-    umDefault\x12=\n\x0eenum_o_default\x18\x04\x20\x01(\x0e2\x17.benji.infra\
-    .req.AnEnumR\x0cenumODefault\x129\n\x0cenum_o_empty\x18\x05\x20\x01(\x0e\
-    2\x17.benji.infra.req.AnEnumR\nenumOEmpty\x12?\n\x0fmessage_default\x18\
-    \x06\x20\x01(\x0b2\x16.benji.infra.req.InnerR\x0emessageDefault\x12B\n\
-    \x11message_o_default\x18\x07\x20\x01(\x0b2\x16.benji.infra.req.InnerR\
-    \x0fmessageODefault\x12>\n\x0fmessage_o_empty\x18\x08\x20\x01(\x0b2\x16.\
-    benji.infra.req.InnerR\rmessageOEmpty\x12\x1e\n\na_double_0\x18\t\x20\
-    \x01(\x01H\0R\x08aDouble0\x125\n\tan_enum_0\x18\n\x20\x01(\x0e2\x17.benj\
-    i.infra.req.AnEnumH\0R\x07anEnum0\x128\n\x0ba_message_0\x18\x0b\x20\x01(\
-    \x0b2\x16.benji.infra.req.InnerH\0R\taMessage0\x12\x1e\n\na_double_1\x18\
-    \x0c\x20\x01(\x01H\x01R\x08aDouble1\x125\n\tan_enum_1\x18\r\x20\x01(\x0e\
-    2\x17.benji.infra.req.AnEnumH\x01R\x07anEnum1\x128\n\x0ba_message_1\x18\
-    \x0e\x20\x01(\x0b2\x16.benji.infra.req.InnerH\x01R\taMessage1\x12\x1e\n\
-    \na_double_2\x18\x0f\x20\x01(\x01H\x02R\x08aDouble2\x125\n\tan_enum_2\
-    \x18\x10\x20\x01(\x0e2\x17.benji.infra.req.AnEnumH\x02R\x07anEnum2\x128\
-    \n\x0ba_message_2\x18\x11\x20\x01(\x0b2\x16.benji.infra.req.InnerH\x02R\
-    \taMessage2\x12#\n\rbytes_default\x18\x12\x20\x01(\x0cR\x0cbytesDefault\
-    \x12&\n\x0fbytes_o_default\x18\x13\x20\x01(\x0cR\rbytesODefault\x12\"\n\
-    \rbytes_o_empty\x18\x14\x20\x01(\x0cR\x0bbytesOEmptyB\x0f\n\rone_of_doub\
-    leB\r\n\x0bone_of_enumB\x10\n\x0eone_of_message\".\n\x05Inner\x12%\n\x0e\
-    double_default\x18\x01\x20\x01(\x01R\rdoubleDefault*3\n\x06AnEnum\x12\
-    \x0b\n\x07NOT_SET\x10\0\x12\n\n\x06A_CASE\x10\x01\x12\x10\n\x0cANOTHER_C\
-    ASE\x10\x02b\x06proto3\
+    \n\x18strict_merge_tests.proto\x12\x0fbenji.infra.req\"\xbf\x07\n\x08Com\
+    pound\x12%\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault\x12,\
+    \n\x12double_non_default\x18\x02\x20\x01(\x01R\x10doubleNonDefault\x12:\
+    \n\x0cenum_default\x18\x03\x20\x01(\x0e2\x17.benji.infra.req.AnEnumR\x0b\
+    enumDefault\x12=\n\x0eenum_o_default\x18\x04\x20\x01(\x0e2\x17.benji.inf\
+    ra.req.AnEnumR\x0cenumODefault\x129\n\x0cenum_o_empty\x18\x05\x20\x01(\
+    \x0e2\x17.benji.infra.req.AnEnumR\nenumOEmpty\x12\x1e\n\na_double_0\x18\
+    \x06\x20\x01(\x01H\0R\x08aDouble0\x125\n\tan_enum_0\x18\x07\x20\x01(\x0e\
+    2\x17.benji.infra.req.AnEnumH\0R\x07anEnum0\x128\n\x0ba_message_0\x18\
+    \x08\x20\x01(\x0b2\x16.benji.infra.req.InnerH\0R\taMessage0\x12\x1e\n\na\
+    _double_1\x18\t\x20\x01(\x01H\x01R\x08aDouble1\x125\n\tan_enum_1\x18\n\
+    \x20\x01(\x0e2\x17.benji.infra.req.AnEnumH\x01R\x07anEnum1\x128\n\x0ba_m\
+    essage_1\x18\x0b\x20\x01(\x0b2\x16.benji.infra.req.InnerH\x01R\taMessage\
+    1\x12\x1e\n\na_double_2\x18\x0c\x20\x01(\x01H\x02R\x08aDouble2\x125\n\ta\
+    n_enum_2\x18\r\x20\x01(\x0e2\x17.benji.infra.req.AnEnumH\x02R\x07anEnum2\
+    \x128\n\x0ba_message_2\x18\x0e\x20\x01(\x0b2\x16.benji.infra.req.InnerH\
+    \x02R\taMessage2\x12?\n\x0fmessage_default\x18\x0f\x20\x01(\x0b2\x16.ben\
+    ji.infra.req.InnerR\x0emessageDefault\x12B\n\x11message_o_default\x18\
+    \x10\x20\x01(\x0b2\x16.benji.infra.req.InnerR\x0fmessageODefault\x12>\n\
+    \x0fmessage_o_empty\x18\x11\x20\x01(\x0b2\x16.benji.infra.req.InnerR\rme\
+    ssageOEmptyB\x0f\n\rone_of_doubleB\r\n\x0bone_of_enumB\x10\n\x0eone_of_m\
+    essage\".\n\x05Inner\x12%\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdou\
+    bleDefault*!\n\x06AnEnum\x12\x0b\n\x07NOT_SET\x10\0\x12\n\n\x06A_CASE\
+    \x10\x01b\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::Lazy::INIT;

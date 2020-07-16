@@ -795,7 +795,7 @@ enum OutputTarget<'a> {
 pub struct CodedOutputStream<'a> {
     target: OutputTarget<'a>,
     // alias to buf from target
-    pub buffer: &'a mut [u8],
+    buffer: &'a mut [u8],
     // within buffer
     position: usize,
 }

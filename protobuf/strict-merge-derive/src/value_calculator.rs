@@ -48,7 +48,7 @@ pub enum ValueOption {
 
 pub trait ValueCalculator {
     // TODO: Maybe instead of all the arguments, pass in the calculator
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream;
+    fn read(&self, ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream;
     // a tokenstream rather than an ident because self. is not allowed in an ident
     fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
     fn write(&self, ident: &TokenStream, os_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
@@ -86,8 +86,7 @@ pub trait ValueCalculator {
         };
 
         let is_ident = format_ident!("is");
-        let wire_type_ident = format_ident!("wire_type");
-        let reader = self.read(ident, &wire_type_ident, &is_ident, &type_without_opt);
+        let reader = self.read(ident, &is_ident, &type_without_opt);
         let mut assign = wire_check(self.wire_check());
 
         let value_option;
@@ -228,12 +227,12 @@ impl OneOfMapper {
 }
 
 impl ValueCalculator for OneOfMapper {
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
+    fn read(&self, ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
         let mut ts = TokenStream::new();
 
         for mapping in self.mapping.iter() {
             let wire_check = wire_check(mapping.proto_mapping.wire_check());
-            let read = mapping.proto_mapping.read(ident, wire_type_ident, is_ident, type_without_opt);
+            let read = mapping.proto_mapping.read(ident, is_ident, type_without_opt);
             let enum_case = &mapping.enum_case;
 
             let assign = quote! {
@@ -283,9 +282,9 @@ pub struct ProtobufMessage {
 }
 
 impl ValueCalculator for ProtobufMessage {
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
+    fn read(&self, ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
         quote! {
-            ::protobuf::rt::read_message::<_>(#wire_type_ident, #is_ident)?
+            ::protobuf::rt::read_message::<_>(wire_type, is)?
         }
     }
 
@@ -312,42 +311,10 @@ impl ValueCalculator for ProtobufMessage {
     }
 }
 
-impl ValueCalculator for u8 {
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
-        quote! {
-            ::protobuf::rt::read_singular_proto3_bytes(#wire_type_ident, #is_ident)?
-        }
-    }
-
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        quote! {
-            #size_ident += ::protobuf::rt::bytes_size(#field_number, &#ident);
-        }
-    }
-
-    fn write(&self, ident: &TokenStream, os_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        quote! {
-            #os_ident.write_bytes(#field_number, &#ident)?;
-        }
-    }
-
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        Some(quote! {
-            vec![]
-        })
-    }
-
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        Some(quote! {
-            !#ident.is_empty()
-        })
-    }
-}
-
 pub struct ProtobufEnum;
 
 impl ValueCalculator for ProtobufEnum {
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, _: &TokenStream) -> TokenStream {
+    fn read(&self, ident: &Ident, is_ident: &Ident, _: &TokenStream) -> TokenStream {
         quote! {
             #is_ident.read_enum_strict()?
         }
@@ -376,7 +343,7 @@ impl ValueCalculator for ProtobufEnum {
 }
 
 impl ValueCalculator for f64 {
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, _: &TokenStream) -> TokenStream {
+    fn read(&self, ident: &Ident, is_ident: &Ident, _: &TokenStream) -> TokenStream {
         quote! {
             #is_ident.read_double()?
         }

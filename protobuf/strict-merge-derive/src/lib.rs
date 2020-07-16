@@ -21,7 +21,7 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     match derive_input.data {
         Data::Struct(s) => {
-            let mut named_fields: Vec<Field> = if let Fields::Named(n) = s.fields {
+            let named_fields: Vec<Field> = if let Fields::Named(n) = s.fields {
                 n.named.into_iter().collect()
             } else {
                 unreachable!("All fields should be named");
@@ -46,11 +46,6 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 .map(|f| f.to_string() + "_opt")
                 .map(|f| format_ident!("{}", f))
                 .collect::<Vec<_>>();
-
-            // Make sure one-of's are processed as alst (just like in the protobuf standard implementation)
-            // Else the byte array is ordered differently and tests may fail
-            named_fields.sort_by(|a, b| )
-
             for field in named_fields.iter() {
                 let p = || panic!("{:#?}", field);
 

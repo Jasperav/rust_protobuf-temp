@@ -42,7 +42,6 @@ pub fn str_to_value_calculator(str: &str) -> Box<dyn ValueCalculator> {
     match str {
         "oneof" => unimplemented!("Oneof and message is not supported"),
         "double" => Box::new(0 as f64),
-        "u8" => Box::new(0 as u8),
         "enum" => Box::new(ProtobufEnum),
         _ => unimplemented!("Nothing configured for type: {}", str)
     }

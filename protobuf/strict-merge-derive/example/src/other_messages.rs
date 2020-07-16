@@ -1,6 +1,6 @@
 use protobuf::{ProtobufEnumStrict, ProtobufResult};
 
-#[derive(protobuf::StrictMerge, Debug, PartialEq, Clone)]
+#[derive(protobuf::StrictMerge, Debug, PartialEq)]
 pub struct Inner {
     #[prototype = "double"]
     #[fieldnumber = 1]
@@ -47,7 +47,6 @@ pub mod compound {
 pub enum AnEnum {
     NotSet = 0,
     ACase = 1,
-    AnotherCase = 2,
 }
 
 // TODO: Derive
@@ -59,14 +58,12 @@ impl ProtobufEnumStrict for AnEnum {
                 0
             }
             AnEnum::ACase => 1,
-            AnEnum::AnotherCase => 2
         }
     }
 
     fn from_i32(value: i32) -> ProtobufResult<AnEnum> {
         match value {
             1 => Ok(AnEnum::ACase),
-            2 => Ok(AnEnum::AnotherCase),
             _ => {
                 debug_assert!(false, "Unexpectedly found unsupported value {} for type ConversationCreateRespError", value);
 
