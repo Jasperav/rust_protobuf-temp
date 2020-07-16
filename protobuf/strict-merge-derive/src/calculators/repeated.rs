@@ -4,7 +4,9 @@ use crate::parser::OneOfMapping;
 
 pub struct Repeated {
     pub inner_calculator: Box<dyn ValueCalculator>,
+    pub tag_size: Option<u32>,
 }
+
 
 impl ValueCalculator for Repeated {
     fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> (Assign, TokenStream) {
@@ -15,13 +17,14 @@ impl ValueCalculator for Repeated {
         })
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool, tag_size: u32) -> TokenStream {
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
         let computer = self.inner_calculator.read_repeated().0;
         let loop_variable = quote! { temp_loop };
 
         match computer {
             RepeatedComputer::Reuse => {
-                let size = self.inner_calculator.size(&loop_variable, size_ident, field_number, type_without_opt, true, tag_size);
+                let tag_size = self.tag_size.unwrap();
+                let size = self.inner_calculator.size(&loop_variable, size_ident, field_number, type_without_opt, true);
 
                 quote! {
                     for #loop_variable in &#ident {
@@ -31,6 +34,8 @@ impl ValueCalculator for Repeated {
                 }
             }
             RepeatedComputer::UseLen => {
+                let tag_size = self.tag_size.unwrap();
+
                 quote! {
                     #size_ident += #tag_size * #ident.len() as u32;
                 }

@@ -12,7 +12,7 @@ impl ValueCalculator for ProtobufEnum {
         })
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool, tag_size: u32) -> TokenStream {
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
         let deref = add_deref(is_reference);
         quote! {
             debug_assert_ne!(0, #ident.value());

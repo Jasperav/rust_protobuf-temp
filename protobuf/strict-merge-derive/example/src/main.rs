@@ -39,9 +39,7 @@ fn main() {
         vec_message_default: vec![first_inner.clone(), second_inner.clone()],
         vec_message_o_empty: vec![],
         vec_enum_default: vec![AnEnum::ACase, AnEnum::AnotherCase],
-        vec_enum_o_empty: vec![],
-        bool_true: true,
-        bool_false: false
+        vec_enum_o_empty: vec![]
     };
     let first_inner = org_message::Inner {
         double_default: 1 as f64,
@@ -73,10 +71,8 @@ fn main() {
         vec_message_o_empty: vec![],
         vec_enum_default: vec![ProtobufEnumOrUnknown::new(org_message::AnEnum::A_CASE), ProtobufEnumOrUnknown::new(org_message::AnEnum::ANOTHER_CASE)],
         vec_enum_o_empty: vec![],
-        bool_true: true,
-        bool_false: false,
         unknown_fields: Default::default(),
-        cached_size: Default::default(),
+        cached_size: Default::default()
     };
 
     assert_eq!(new.compute_size(), old.compute_size() as usize);

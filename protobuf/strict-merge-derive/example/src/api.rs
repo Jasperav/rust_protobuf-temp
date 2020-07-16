@@ -8,24 +8,19 @@ use crate::other_messages::{compound, Inner};
 pub struct Compound {
     #[prototype = "double"]
     #[fieldnumber = 1]
-    #[tagsize = 10]
     pub double_default: f64,
     #[prototype = "double"]
     #[fieldnumber = 2]
-    #[tagsize = 10]
     pub double_non_default: f64,
 
     #[prototype = "enum"]
     #[fieldnumber = 3]
-    #[tagsize = 10]
     pub enum_default: crate::other_messages::AnEnum,
     #[prototype = "enum"]
     #[fieldnumber = 4]
-    #[tagsize = 10]
     pub enum_o_default: Option<crate::other_messages::AnEnum>,
     #[prototype = "enum"]
     #[fieldnumber = 5]
-    #[tagsize = 10]
     pub enum_o_empty: Option<crate::other_messages::AnEnum>,
 
     #[prototype = "message"]
@@ -45,28 +40,23 @@ pub struct Compound {
     #[oneof = "double|double|9"]
     #[oneof = "_enum|enum|10"]
     #[oneof = "message|message|11|1"]
-    #[tagsize = 10]
     pub one_of_double: compound::OneOfSomething,
     #[prototype = "oneof"]
     #[oneof = "double|double|12"]
     #[oneof = "_enum|enum|13"]
     #[oneof = "message|message|14|1"]
-    #[tagsize = 10]
     pub one_of_enum: compound::OneOfSomething,
     #[prototype = "oneof"]
     #[oneof = "double|double|15"]
     #[oneof = "_enum|enum|16"]
     #[oneof = "message|message|17|2"]
-    #[tagsize = 10]
     pub one_of_message: compound::OneOfSomething,
 
     #[prototype = "u8"]
     #[fieldnumber = 18]
-    #[tagsize = 10]
     pub bytes_default: ::std::vec::Vec<u8>,
     #[prototype = "u8"]
     #[fieldnumber = 19]
-    #[tagsize = 10]
     pub bytes_o_empty: ::std::vec::Vec<u8>,
 
     #[prototype = "repeated"]
@@ -94,20 +84,9 @@ pub struct Compound {
     #[prototype = "repeated"]
     #[repeatedinner = "enum"]
     #[fieldnumber = 24]
-    #[tagsize = 10]
     pub vec_enum_default: ::std::vec::Vec<crate::other_messages::AnEnum>,
     #[prototype = "repeated"]
     #[repeatedinner = "enum"]
     #[fieldnumber = 25]
-    #[tagsize = 10]
     pub vec_enum_o_empty: ::std::vec::Vec<crate::other_messages::AnEnum>,
-
-    #[prototype = "bool"]
-    #[fieldnumber = 26]
-    #[tagsize = 10]
-    pub bool_true: bool,
-    #[prototype = "bool"]
-    #[fieldnumber = 27]
-    #[tagsize = 10]
-    pub bool_false: bool,
 }

@@ -3,7 +3,6 @@ use proc_macro2::TokenStream;
 use crate::calculators::ValueCalculator;
 use crate::calculators::one_of::OneOfMapper;
 use crate::calculators::protobuf_enum::ProtobufEnum;
-use crate::calculators::message::ProtobufMessage;
 
 pub fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStream> {
     field.attrs.iter().filter(|f| f.path.segments.iter().find(|f| attr == &f.ident.to_string()).is_some()).map(|a| a.tokens.clone().into()).collect()
@@ -38,12 +37,10 @@ pub enum Proto<'a> {
 
 pub fn str_to_value_calculator(str: &str) -> Box<dyn ValueCalculator> {
     match str {
-        "oneof" => unimplemented!("Oneof is not supported"),
+        "oneof" => unimplemented!("Oneof and message is not supported"),
         "double" => Box::new(0 as f64),
         "u8" => Box::new(0 as u8),
         "enum" => Box::new(ProtobufEnum),
-        "bool" => Box::new(false),
-        "message" => Box::new(ProtobufMessage),
         _ => unimplemented!("Nothing configured for type: {}", str)
     }
 }

@@ -9,7 +9,6 @@ pub struct Calculator<'a> {
     pub ident: &'a Ident,
     pub is_option: bool,
     pub type_without_opt: TokenStream,
-    pub tag_size: u32,
     pub declaration: &'a mut Vec<TokenStream>,
     pub opt_checks: &'a mut Vec<TokenStream>,
     pub struct_gen: &'a mut Vec<TokenStream>,
@@ -20,7 +19,7 @@ pub struct Calculator<'a> {
 
 impl Calculator<'_> {
     pub fn calculate(self, t: Box<dyn ValueCalculator>) {
-        t.calculate(self.ident, self.map_type, self.is_option, self.type_without_opt, self.tag_size, self.declaration, self.opt_checks, self.struct_gen, self.deserializer, self.compute_sizer, self.os_writer);
+        t.calculate(self.ident, self.map_type, self.is_option, self.type_without_opt, self.declaration, self.opt_checks, self.struct_gen, self.deserializer, self.compute_sizer, self.os_writer);
     }
 }
 
@@ -60,7 +59,7 @@ pub trait ValueCalculator {
     // TODO: Maybe instead of all the arguments, pass in the calculator
     fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> (Assign, TokenStream);
     // a tokenstream rather than an ident because self. is not allowed in an ident
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool, tag_size: u32) -> TokenStream;
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
     fn write(&self, ident: &TokenStream, os_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
     fn keyword_match_statement(&self) -> Option<TokenStream> {
         None
@@ -82,7 +81,6 @@ pub trait ValueCalculator {
         map_type: MapType,
         is_option: bool,
         type_without_opt: TokenStream,
-        tag_size: u32,
         declaration: &mut Vec<TokenStream>,
         opt_checks: &mut Vec<TokenStream>,
         struct_gen: &mut Vec<TokenStream>,
@@ -146,7 +144,7 @@ pub trait ValueCalculator {
             ValueOption::Optional => quote! { e },
             ValueOption::MandatoryOptional | ValueOption::Mandatory => quote! { # ident_with_self },
         };
-        let size = self.size(&ident_some, &format_ident!("size"), field_number, &type_without_opt, is_option, tag_size);
+        let size = self.size(&ident_some, &format_ident!("size"), field_number, &type_without_opt, is_option);
         let os_ident = format_ident!("os");
         let write = self.write(&ident_some, &os_ident, field_number, &type_without_opt, is_option);
 

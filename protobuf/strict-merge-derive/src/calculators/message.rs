@@ -1,7 +1,9 @@
 use crate::calculators::{ValueCalculator, Assign, add_ampersand, RepeatedComputer};
 use proc_macro2::{Ident, TokenStream};
 
-pub struct ProtobufMessage;
+pub struct ProtobufMessage {
+    pub(crate) tag_size: u32
+}
 
 impl ValueCalculator for ProtobufMessage {
     fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> (Assign, TokenStream) {
@@ -10,7 +12,9 @@ impl ValueCalculator for ProtobufMessage {
         })
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool, tag_size: u32) -> TokenStream {
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
+        let tag_size = self.tag_size;
+
         quote! {
             let len = #ident.compute_size() as u32;
             #size_ident += #tag_size + ::protobuf::rt::compute_raw_varint32_size(len) + len;

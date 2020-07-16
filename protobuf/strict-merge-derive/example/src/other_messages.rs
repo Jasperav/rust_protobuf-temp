@@ -4,7 +4,6 @@ use protobuf::{ProtobufEnumStrict, ProtobufResult};
 pub struct Inner {
     #[prototype = "double"]
     #[fieldnumber = 1]
-    #[tagsize = 10]
     pub double_default: f64,
 }
 

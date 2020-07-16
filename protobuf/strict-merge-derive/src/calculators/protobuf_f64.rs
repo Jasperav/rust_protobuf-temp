@@ -10,7 +10,7 @@ impl ValueCalculator for f64 {
         })
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool, tag_size: u32) -> TokenStream {
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
         quote! {
             #size_ident += 9;
         }
