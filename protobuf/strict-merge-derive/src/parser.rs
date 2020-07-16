@@ -3,9 +3,8 @@ use quote::{quote, format_ident};
 use proc_macro2::{TokenStream, Punct, Literal, Ident};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
+use crate::value_calculator::{ValueCalculator, ProtobufMessage};
 use crate::matcher::str_to_value_calculator;
-use crate::calculators::ValueCalculator;
-use crate::calculators::message::ProtobufMessage;
 
 fn parse_literal(input: &ParseBuffer) -> syn::Result<String> {
     Ok(Literal::parse(input)?.to_string().replace("\"", ""))
@@ -34,6 +33,11 @@ impl Parse for FieldNumber {
         Ok(FieldNumber(val.to_string().parse().unwrap()))
     }
 }
+
+pub struct OneOfMapper {
+    pub mapping: Vec<OneOfMapping>,
+}
+
 pub struct OneOfMapping {
     pub enum_case: Ident,
     pub proto_mapping: Box<dyn ValueCalculator>,

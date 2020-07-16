@@ -903,28 +903,6 @@ pub fn read_repeated_message_into_repeated_field<M: Message + Default>(
     }
 }
 
-pub fn read_repeated_message_strict_into_vec<M>(
-    wire_type: WireType,
-    is: &mut CodedInputStream,
-    target: &mut Vec<M>,
-) -> ProtobufResult<()> where M: StrictMerge<M> {
-    match wire_type {
-        WireTypeLengthDelimited => {
-            is.incr_recursion()?;
-            let res = match is.strict_merge_message() {
-                Ok(m) => {
-                    target.push(m);
-                    Ok(())
-                }
-                Err(e) => Err(e),
-            };
-            is.decr_recursion();
-            res
-        }
-        _ => Err(unexpected_wire_type(wire_type)),
-    }
-}
-
 /// Read repeated `message` field.
 pub fn read_repeated_message_into_vec<M: Message + Default>(
     wire_type: WireType,

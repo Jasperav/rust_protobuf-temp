@@ -1,8 +1,11 @@
-use syn::Field;
-use proc_macro2::TokenStream;
-use crate::calculators::ValueCalculator;
-use crate::calculators::one_of::OneOfMapper;
-use crate::calculators::protobuf_enum::ProtobufEnum;
+use syn::{DeriveInput, Data, Fields, Field};
+use quote::{quote, format_ident};
+use proc_macro2::{TokenStream, Punct, Literal, Ident};
+use syn::parse::{Parse, ParseBuffer};
+use syn::parse_macro_input;
+use crate::parser::{Prototype, FieldNumber, OneOfMapping, OneOfMapper};
+use crate::value_calculator::{Calculator, ValueCalculator, ProtobufEnum, ProtobufMessage};
+use std::str::FromStr;
 
 pub fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStream> {
     field.attrs.iter().filter(|f| f.path.segments.iter().find(|f| attr == &f.ident.to_string()).is_some()).map(|a| a.tokens.clone().into()).collect()

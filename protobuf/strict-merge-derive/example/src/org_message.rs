@@ -42,9 +42,6 @@ pub struct Compound {
     pub vec_double_default: ::std::vec::Vec<f64>,
     pub vec_double_o_default: ::std::vec::Vec<f64>,
     pub vec_double_o_empty: ::std::vec::Vec<f64>,
-    pub vec_message_default: ::std::vec::Vec<Inner>,
-    pub vec_message_o_default: ::std::vec::Vec<Inner>,
-    pub vec_message_o_empty: ::std::vec::Vec<Inner>,
     // message oneof groups
     pub one_of_double: ::std::option::Option<compound::One_of_double>,
     pub one_of_enum: ::std::option::Option<compound::One_of_enum>,
@@ -395,21 +392,6 @@ impl ::protobuf::Message for Compound {
                 return false;
             }
         }
-        for v in &self.vec_message_default {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        for v in &self.vec_message_o_default {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        for v in &self.vec_message_o_empty {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         true
     }
 
@@ -528,15 +510,6 @@ impl ::protobuf::Message for Compound {
                 23 => {
                     ::protobuf::rt::read_repeated_double_into(wire_type, is, &mut self.vec_double_o_empty)?;
                 },
-                24 => {
-                    ::protobuf::rt::read_repeated_message_into_vec(wire_type, is, &mut self.vec_message_default)?;
-                },
-                25 => {
-                    ::protobuf::rt::read_repeated_message_into_vec(wire_type, is, &mut self.vec_message_o_default)?;
-                },
-                26 => {
-                    ::protobuf::rt::read_repeated_message_into_vec(wire_type, is, &mut self.vec_message_o_empty)?;
-                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -588,18 +561,6 @@ impl ::protobuf::Message for Compound {
         my_size += 10 * self.vec_double_default.len() as u32;
         my_size += 10 * self.vec_double_o_default.len() as u32;
         my_size += 10 * self.vec_double_o_empty.len() as u32;
-        for value in &self.vec_message_default {
-            let len = value.compute_size();
-            my_size += 2 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        };
-        for value in &self.vec_message_o_default {
-            let len = value.compute_size();
-            my_size += 2 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        };
-        for value in &self.vec_message_o_empty {
-            let len = value.compute_size();
-            my_size += 2 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        };
         if let ::std::option::Option::Some(ref v) = self.one_of_double {
             match v {
                 &compound::One_of_double::a_double_0(v) => {
@@ -689,15 +650,6 @@ impl ::protobuf::Message for Compound {
         };
         for v in &self.vec_double_o_empty {
             os.write_double(23, *v)?;
-        };
-        for v in &self.vec_message_default {
-            ::protobuf::rt::write_message_field_with_cached_size(24, v, os)?;
-        };
-        for v in &self.vec_message_o_default {
-            ::protobuf::rt::write_message_field_with_cached_size(25, v, os)?;
-        };
-        for v in &self.vec_message_o_empty {
-            ::protobuf::rt::write_message_field_with_cached_size(26, v, os)?;
         };
         if let ::std::option::Option::Some(ref v) = self.one_of_double {
             match v {
@@ -893,21 +845,6 @@ impl ::protobuf::Message for Compound {
                 |m: &Compound| { &m.vec_double_o_empty },
                 |m: &mut Compound| { &mut m.vec_double_o_empty },
             ));
-            fields.push(::protobuf::reflect::rt::make_vec_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>>(
-                "vec_message_default",
-                |m: &Compound| { &m.vec_message_default },
-                |m: &mut Compound| { &mut m.vec_message_default },
-            ));
-            fields.push(::protobuf::reflect::rt::make_vec_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>>(
-                "vec_message_o_default",
-                |m: &Compound| { &m.vec_message_o_default },
-                |m: &mut Compound| { &mut m.vec_message_o_default },
-            ));
-            fields.push(::protobuf::reflect::rt::make_vec_accessor::<_, ::protobuf::reflect::types::ProtobufTypeMessage<Inner>>(
-                "vec_message_o_empty",
-                |m: &Compound| { &m.vec_message_o_empty },
-                |m: &mut Compound| { &mut m.vec_message_o_empty },
-            ));
             ::protobuf::reflect::MessageDescriptor::new::<Compound>(
                 "Compound",
                 fields,
@@ -947,9 +884,6 @@ impl ::protobuf::Clear for Compound {
         self.vec_double_default.clear();
         self.vec_double_o_default.clear();
         self.vec_double_o_empty.clear();
-        self.vec_message_default.clear();
-        self.vec_message_o_default.clear();
-        self.vec_message_o_empty.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1168,40 +1102,36 @@ impl ::protobuf::reflect::ProtobufValue for AnEnum {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x11org_message.proto\x12\x0fbenji.infra.req\"\x96\x0b\n\x08Compound\
-    \x12%\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault\x12,\n\
-    \x12double_non_default\x18\x02\x20\x01(\x01R\x10doubleNonDefault\x12:\n\
-    \x0cenum_default\x18\x03\x20\x01(\x0e2\x17.benji.infra.req.AnEnumR\x0ben\
-    umDefault\x12=\n\x0eenum_o_default\x18\x04\x20\x01(\x0e2\x17.benji.infra\
-    .req.AnEnumR\x0cenumODefault\x129\n\x0cenum_o_empty\x18\x05\x20\x01(\x0e\
-    2\x17.benji.infra.req.AnEnumR\nenumOEmpty\x12?\n\x0fmessage_default\x18\
-    \x06\x20\x01(\x0b2\x16.benji.infra.req.InnerR\x0emessageDefault\x12B\n\
-    \x11message_o_default\x18\x07\x20\x01(\x0b2\x16.benji.infra.req.InnerR\
-    \x0fmessageODefault\x12>\n\x0fmessage_o_empty\x18\x08\x20\x01(\x0b2\x16.\
-    benji.infra.req.InnerR\rmessageOEmpty\x12\x1e\n\na_double_0\x18\t\x20\
-    \x01(\x01H\0R\x08aDouble0\x125\n\tan_enum_0\x18\n\x20\x01(\x0e2\x17.benj\
-    i.infra.req.AnEnumH\0R\x07anEnum0\x128\n\x0ba_message_0\x18\x0b\x20\x01(\
-    \x0b2\x16.benji.infra.req.InnerH\0R\taMessage0\x12\x1e\n\na_double_1\x18\
-    \x0c\x20\x01(\x01H\x01R\x08aDouble1\x125\n\tan_enum_1\x18\r\x20\x01(\x0e\
-    2\x17.benji.infra.req.AnEnumH\x01R\x07anEnum1\x128\n\x0ba_message_1\x18\
-    \x0e\x20\x01(\x0b2\x16.benji.infra.req.InnerH\x01R\taMessage1\x12\x1e\n\
-    \na_double_2\x18\x0f\x20\x01(\x01H\x02R\x08aDouble2\x125\n\tan_enum_2\
-    \x18\x10\x20\x01(\x0e2\x17.benji.infra.req.AnEnumH\x02R\x07anEnum2\x128\
-    \n\x0ba_message_2\x18\x11\x20\x01(\x0b2\x16.benji.infra.req.InnerH\x02R\
-    \taMessage2\x12#\n\rbytes_default\x18\x12\x20\x01(\x0cR\x0cbytesDefault\
-    \x12&\n\x0fbytes_o_default\x18\x13\x20\x01(\x0cR\rbytesODefault\x12\"\n\
-    \rbytes_o_empty\x18\x14\x20\x01(\x0cR\x0bbytesOEmpty\x12,\n\x12vec_doubl\
-    e_default\x18\x15\x20\x03(\x01R\x10vecDoubleDefault\x12/\n\x14vec_double\
-    _o_default\x18\x16\x20\x03(\x01R\x11vecDoubleODefault\x12+\n\x12vec_doub\
-    le_o_empty\x18\x17\x20\x03(\x01R\x0fvecDoubleOEmpty\x12F\n\x13vec_messag\
-    e_default\x18\x18\x20\x03(\x0b2\x16.benji.infra.req.InnerR\x11vecMessage\
-    Default\x12I\n\x15vec_message_o_default\x18\x19\x20\x03(\x0b2\x16.benji.\
-    infra.req.InnerR\x12vecMessageODefault\x12E\n\x13vec_message_o_empty\x18\
-    \x1a\x20\x03(\x0b2\x16.benji.infra.req.InnerR\x10vecMessageOEmptyB\x0f\n\
-    \rone_of_doubleB\r\n\x0bone_of_enumB\x10\n\x0eone_of_message\".\n\x05Inn\
-    er\x12%\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault*3\n\x06\
-    AnEnum\x12\x0b\n\x07NOT_SET\x10\0\x12\n\n\x06A_CASE\x10\x01\x12\x10\n\
-    \x0cANOTHER_CASE\x10\x02b\x06proto3\
+    \n\x11org_message.proto\x12\x0fbenji.infra.req\"\xbc\t\n\x08Compound\x12\
+    %\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault\x12,\n\x12dou\
+    ble_non_default\x18\x02\x20\x01(\x01R\x10doubleNonDefault\x12:\n\x0cenum\
+    _default\x18\x03\x20\x01(\x0e2\x17.benji.infra.req.AnEnumR\x0benumDefaul\
+    t\x12=\n\x0eenum_o_default\x18\x04\x20\x01(\x0e2\x17.benji.infra.req.AnE\
+    numR\x0cenumODefault\x129\n\x0cenum_o_empty\x18\x05\x20\x01(\x0e2\x17.be\
+    nji.infra.req.AnEnumR\nenumOEmpty\x12?\n\x0fmessage_default\x18\x06\x20\
+    \x01(\x0b2\x16.benji.infra.req.InnerR\x0emessageDefault\x12B\n\x11messag\
+    e_o_default\x18\x07\x20\x01(\x0b2\x16.benji.infra.req.InnerR\x0fmessageO\
+    Default\x12>\n\x0fmessage_o_empty\x18\x08\x20\x01(\x0b2\x16.benji.infra.\
+    req.InnerR\rmessageOEmpty\x12\x1e\n\na_double_0\x18\t\x20\x01(\x01H\0R\
+    \x08aDouble0\x125\n\tan_enum_0\x18\n\x20\x01(\x0e2\x17.benji.infra.req.A\
+    nEnumH\0R\x07anEnum0\x128\n\x0ba_message_0\x18\x0b\x20\x01(\x0b2\x16.ben\
+    ji.infra.req.InnerH\0R\taMessage0\x12\x1e\n\na_double_1\x18\x0c\x20\x01(\
+    \x01H\x01R\x08aDouble1\x125\n\tan_enum_1\x18\r\x20\x01(\x0e2\x17.benji.i\
+    nfra.req.AnEnumH\x01R\x07anEnum1\x128\n\x0ba_message_1\x18\x0e\x20\x01(\
+    \x0b2\x16.benji.infra.req.InnerH\x01R\taMessage1\x12\x1e\n\na_double_2\
+    \x18\x0f\x20\x01(\x01H\x02R\x08aDouble2\x125\n\tan_enum_2\x18\x10\x20\
+    \x01(\x0e2\x17.benji.infra.req.AnEnumH\x02R\x07anEnum2\x128\n\x0ba_messa\
+    ge_2\x18\x11\x20\x01(\x0b2\x16.benji.infra.req.InnerH\x02R\taMessage2\
+    \x12#\n\rbytes_default\x18\x12\x20\x01(\x0cR\x0cbytesDefault\x12&\n\x0fb\
+    ytes_o_default\x18\x13\x20\x01(\x0cR\rbytesODefault\x12\"\n\rbytes_o_emp\
+    ty\x18\x14\x20\x01(\x0cR\x0bbytesOEmpty\x12,\n\x12vec_double_default\x18\
+    \x15\x20\x03(\x01R\x10vecDoubleDefault\x12/\n\x14vec_double_o_default\
+    \x18\x16\x20\x03(\x01R\x11vecDoubleODefault\x12+\n\x12vec_double_o_empty\
+    \x18\x17\x20\x03(\x01R\x0fvecDoubleOEmptyB\x0f\n\rone_of_doubleB\r\n\x0b\
+    one_of_enumB\x10\n\x0eone_of_message\".\n\x05Inner\x12%\n\x0edouble_defa\
+    ult\x18\x01\x20\x01(\x01R\rdoubleDefault*3\n\x06AnEnum\x12\x0b\n\x07NOT_\
+    SET\x10\0\x12\n\n\x06A_CASE\x10\x01\x12\x10\n\x0cANOTHER_CASE\x10\x02b\
+    \x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::Lazy::INIT;

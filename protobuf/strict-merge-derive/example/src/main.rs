@@ -17,9 +17,6 @@ fn main() {
     let first_inner = Inner {
         double_default: 1 as f64,
     };
-    let second_inner = Inner {
-        double_default: 2 as f64,
-    };
     let new = Compound {
         double_default: 0.0,
         double_non_default: 1 as f64,
@@ -35,12 +32,6 @@ fn main() {
         bytes_default: vec![1, 2],
         bytes_o_default: vec![1, 2],
         bytes_o_empty: vec![],
-        vec_double_default: vec![1 as f64, 2 as f64],
-        vec_double_o_default: vec![1 as f64, 2 as f64],
-        vec_double_o_empty: vec![],
-        vec_message_default: vec![first_inner.clone(), second_inner.clone()],
-        vec_message_o_default: vec![first_inner.clone(), second_inner.clone()],
-        vec_message_o_empty: vec![],
     };
 
     let first_inner = org_message::Inner {
@@ -71,9 +62,9 @@ fn main() {
         vec_double_default: vec![1 as f64, 2 as f64],
         vec_double_o_default: vec![1 as f64, 2 as f64],
         vec_double_o_empty: vec![],
-        vec_message_default: vec![first_inner.clone(), second_inner.clone()],
-        vec_message_o_default: vec![first_inner.clone(), second_inner.clone()],
-        vec_message_o_empty: vec![],
+        // vec_message_default: vec![first_inner.clone(), second_inner.clone()],
+        // vec_message_o_default: vec![first_inner.clone(), second_inner.clone()],
+        // vec_message_o_empty: vec![],
         // vec_enum_default: vec![ProtobufEnumOrUnknown::new(AnEnum::A_CASE), ProtobufEnumOrUnknown::new(AnEnum::ANOTHER_CASE)],
         // vec_enum_o_default: vec![ProtobufEnumOrUnknown::new(AnEnum::A_CASE), ProtobufEnumOrUnknown::new(AnEnum::ANOTHER_CASE)],
         // vec_enum_o_empty: vec![],
