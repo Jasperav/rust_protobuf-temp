@@ -21,24 +21,6 @@ use crate::unknown::UnknownFields;
 
 pub trait StrictMerge<M> {
     fn strict_merge(is: &mut CodedInputStream) -> ProtobufResult<M>;
-    fn compute_size(&self) -> usize;
-    fn write_to_os(&self, os: &mut CodedOutputStream) -> ProtobufResult<()>;
-    fn write_to_bytes(&self) -> ProtobufResult<Vec<u8>> {
-        let size = self.compute_size() as usize;
-        let mut v = Vec::with_capacity(size);
-
-        unsafe {
-            v.set_len(size);
-        }
-
-        {
-            let mut os = CodedOutputStream::bytes(&mut v);
-            self.write_to_os(&mut os)?;
-            os.check_eof();
-        }
-
-        Ok(v)
-    }
 }
 
 /// Trait implemented for all generated structs for protobuf messages.
@@ -53,7 +35,9 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     fn is_initialized(&self) -> bool;
 
     /// Update this message object with fields read from given stream.
-    fn merge_from(&mut self, is: &mut CodedInputStream) -> ProtobufResult<()>;
+    fn merge_from(&mut self, is: &mut CodedInputStream) -> ProtobufResult<()> {
+        unimplemented!()
+    }
 
     /// Write message to the stream.
     ///
@@ -65,7 +49,9 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     fn compute_size(&self) -> u32;
 
     /// Get size previously computed by `compute_size`.
-    fn get_cached_size(&self) -> u32;
+    fn get_cached_size(&self) -> u32 {
+        unimplemented!();
+    }
 
     /// Write the message to the stream.
     ///
@@ -161,9 +147,13 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     }
 
     /// Get a reference to unknown fields.
-    fn get_unknown_fields(&self) -> &UnknownFields;
+    fn get_unknown_fields(&self) -> &UnknownFields {
+        unimplemented!();
+    }
     /// Get a mutable reference to unknown fields.
-    fn mut_unknown_fields(&mut self) -> &mut UnknownFields;
+    fn mut_unknown_fields(&mut self) -> &mut UnknownFields {
+        unimplemented!();
+    }
 
     /// Create an empty message object.
     ///
@@ -304,7 +294,7 @@ pub fn parse_from<M: Message>(is: &mut CodedInputStream) -> ProtobufResult<M> {
     Ok(r)
 }
 
-pub fn parse_strictly_from<M>(is: &mut CodedInputStream) -> ProtobufResult<M> where M: StrictMerge<M> {
+pub fn parse_strictly_from<M: Message>(is: &mut CodedInputStream) -> ProtobufResult<M> where M: StrictMerge<M> {
     M::strict_merge(is)
 }
 
@@ -320,7 +310,7 @@ pub fn parse_from_bytes<M: Message>(bytes: &[u8]) -> ProtobufResult<M> {
 }
 
 /// Parse message strictly from byte array.
-pub fn parse_from_bytes_strict<M>(bytes: &[u8]) -> ProtobufResult<M> where M: StrictMerge<M> {
+pub fn parse_from_bytes_strict<M: Message>(bytes: &[u8]) -> ProtobufResult<M> where M: StrictMerge<M> {
     bytes.with_coded_input_stream(|is| parse_strictly_from::<M>(is))
 }
 

@@ -309,7 +309,7 @@ impl<'a> MessageGen<'a> {
 
     fn write_merge_from(&self, w: &mut CodeWriter, c: &Customize) {
         if c.strict_values.unwrap_or(false) {
-            //return;
+            return;
         }
         let sig = format!(
             "merge_from(&mut self, is: &mut {}::CodedInputStream<'_>) -> {}::ProtobufResult<()>",
@@ -416,9 +416,6 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_impl_message(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-            return;
-        }
         w.impl_for_block(
             &format!("{}::Message", protobuf_crate_path(&self.customize)),
             &format!("{}", self.type_name),
@@ -533,17 +530,11 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_impl_clear(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-            return;
-        }
         w.impl_for_block(
             &format!("{}::Clear", protobuf_crate_path(&self.customize)),
             &format!("{}", self.type_name),
             |w| {
                 w.def_fn("clear(&mut self)", |w| {
-                    if c.skip_clear.unwrap_or(false) {
-                        return;
-                    }
                     for f in self.fields_except_group() {
                         f.write_clear(w);
                     }
@@ -590,7 +581,6 @@ impl<'a> MessageGen<'a> {
                         true => Visibility::Public,
                         false => Visibility::Default,
                     };
-                    w.write_line("#[t_enum]");
                     w.field_decl_vis(
                         vis,
                         &oneof.oneof.field_name().to_string(),
@@ -618,9 +608,6 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_impl_default_for_amp(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-            return;
-        }
         w.impl_args_for_block(
             &["'a"],
             "::std::default::Default",

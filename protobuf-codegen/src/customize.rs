@@ -36,11 +36,9 @@ pub struct Customize {
     pub strict_enums: Option<bool>,
     // Don't allow values to be send with their default values
     pub strict_values: Option<bool>,
-    pub wrap_in_option_if_starts_with: Option<&'static str>,
     pub no_option: Option<&'static str>,
     pub skip_unknown_fields: Option<bool>,
     pub skip_cached_size: Option<bool>,
-    pub skip_clear: Option<bool>,
     pub skip_initialized_check: Option<bool>,
     pub skip_descriptor_static: Option<bool>,
     pub use_derive_debug: Option<bool>,
@@ -204,11 +202,9 @@ pub fn customize_from_rustproto_for_message(source: &MessageOptions) -> Customiz
         serde_derive_cfg,
         strict_enums: None, // TODO
         strict_values: None, // TODO
-        wrap_in_option_if_starts_with: None, // TODO
         no_option: None, // TODO
         skip_unknown_fields: None, // TODO
         skip_cached_size: None, // TODO
-        skip_clear: None, // TODO
         skip_initialized_check: None, // TODO
         skip_descriptor_static: None, // TODO
         use_derive_debug: None, // TODO
@@ -249,11 +245,9 @@ pub fn customize_from_rustproto_for_field(source: &FieldOptions) -> Customize {
         serde_derive_cfg,
         strict_enums: None, // TODO
         strict_values: None, // TODO
-        wrap_in_option_if_starts_with: None, // TODO
         no_option: None, // TODO
         skip_unknown_fields: None, // TODO
         skip_cached_size: None, // TODO
-        skip_clear: None, // TODO
         skip_initialized_check: None, // TODO
         skip_descriptor_static: None, // TODO
         use_derive_debug: None, // TODO
@@ -293,11 +287,9 @@ pub fn customize_from_rustproto_for_file(source: &FileOptions) -> Customize {
         serde_derive_cfg,
         strict_enums: None, // TODO
         strict_values: None, // TODO
-        wrap_in_option_if_starts_with: None, // TODO
         no_option: None, // TODO
         skip_unknown_fields: None, // TODO
         skip_cached_size: None, // TODO
-        skip_clear: None, // TODO
         skip_initialized_check: None, // TODO
         skip_descriptor_static: None, // TODO
         use_derive_debug: None, // TODO
