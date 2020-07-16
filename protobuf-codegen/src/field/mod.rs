@@ -1224,8 +1224,7 @@ impl<'a> FieldGen<'a> {
             self.write_serde_attr(w);
 
             if self.customize.strict_values.unwrap_or(false) {
-                w.write_line(format!("#[prototype = \"{}\"]", protobuf_name(self.proto_type)));
-                w.write_line(format!("#[fieldnumber = {}]", self.proto_field.number()));
+                w.write_line(format!("#[t_{}]", protobuf_name(self.proto_type)));
             }
 
             let vis = self.visibility();

@@ -590,7 +590,7 @@ impl<'a> MessageGen<'a> {
                         true => Visibility::Public,
                         false => Visibility::Default,
                     };
-                    w.write_line("#[prototype = \"oneof\"]");
+                    w.write_line("#[t_enum]");
                     w.field_decl_vis(
                         vis,
                         &oneof.oneof.field_name().to_string(),
