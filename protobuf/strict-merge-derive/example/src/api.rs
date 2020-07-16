@@ -42,20 +42,20 @@ pub struct Compound {
     pub message_o_empty: Option<Inner>,
 
     #[prototype = "oneof"]
-    #[oneof = "double|double|9|1"]
-    #[oneof = "_enum|enum|10|1"]
+    #[oneof = "double|double|9"]
+    #[oneof = "_enum|enum|10"]
     #[oneof = "message|message|11|1"]
     #[tagsize = 10]
     pub one_of_double: compound::OneOfSomething,
     #[prototype = "oneof"]
-    #[oneof = "double|double|12|1"]
-    #[oneof = "_enum|enum|13|1"]
+    #[oneof = "double|double|12"]
+    #[oneof = "_enum|enum|13"]
     #[oneof = "message|message|14|1"]
     #[tagsize = 10]
     pub one_of_enum: compound::OneOfSomething,
     #[prototype = "oneof"]
-    #[oneof = "double|double|15|1"]
-    #[oneof = "_enum|enum|16|1"]
+    #[oneof = "double|double|15"]
+    #[oneof = "_enum|enum|16"]
     #[oneof = "message|message|17|2"]
     #[tagsize = 10]
     pub one_of_message: compound::OneOfSomething,
@@ -104,10 +104,10 @@ pub struct Compound {
 
     #[prototype = "bool"]
     #[fieldnumber = 26]
-    #[tagsize = 2]
+    #[tagsize = 10]
     pub bool_true: bool,
     #[prototype = "bool"]
     #[fieldnumber = 27]
-    #[tagsize = 2]
+    #[tagsize = 10]
     pub bool_false: bool,
 }
