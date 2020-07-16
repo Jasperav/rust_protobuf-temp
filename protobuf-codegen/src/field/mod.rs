@@ -139,7 +139,7 @@ fn field_type_size(field_type: field_descriptor_proto::Type) -> Option<u32> {
 }
 
 /// Optional fields can be stored are `Option<T>`, `SingularField<T>` or `SingularPtrField<T>`.
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum OptionKind {
     /// Field is `Option<T>`
     Option,
@@ -225,7 +225,7 @@ impl OptionKind {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Copy, Debug)]
+#[derive(Clone, PartialEq, Eq, Copy)]
 pub enum SingularFieldFlag {
     // proto2 or proto3 message
     WithFlag {
@@ -245,7 +245,7 @@ impl SingularFieldFlag {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub(crate) struct SingularField<'a> {
     pub flag: SingularFieldFlag,
     pub elem: FieldElem<'a>,
@@ -1258,7 +1258,7 @@ impl<'a> FieldGen<'a> {
         }
     }
 
-    fn write_if_let_self_field_is_some<F>(&self, s: &SingularField, w: &mut CodeWriter, c: &Customize, cb: F)
+    fn write_if_let_self_field_is_some<F>(&self, s: &SingularField, w: &mut CodeWriter, cb: F)
     where
         F: Fn(&RustValueTyped, &mut CodeWriter),
     {
@@ -1315,37 +1315,30 @@ impl<'a> FieldGen<'a> {
                     });
                 }
                 _ => {
-                    let fst = self.full_storage_type(
-                        &self
-                            .proto_field
-                            .message
-                            .scope
-                            .get_file_and_mod(self.customize.clone())
-                    )
-                        .default_value(&self.customize);
-                    let v = RustValueTyped {
-                        value: self.self_field(),
-                        rust_type: self.full_storage_type(
-                            &self
-                                .proto_field
-                                .message
-                                .scope
-                                .get_file_and_mod(self.customize.clone()),
-                        ),
-                    };
-
-                    if s.elem.proto_type() == field_descriptor_proto::Type::TYPE_ENUM {
-                        w.write_line(format!("debug_assert_ne!({}, {});", self.self_field(), fst));
-                        cb(&v, w);
-                        return;
-                    }
                     w.if_stmt(
                         format!(
                             "{} != {}",
                             self.self_field(),
-                            fst
+                            self.full_storage_type(
+                                &self
+                                    .proto_field
+                                    .message
+                                    .scope
+                                    .get_file_and_mod(self.customize.clone())
+                            )
+                            .default_value(&self.customize)
                         ),
                         |w| {
+                            let v = RustValueTyped {
+                                value: self.self_field(),
+                                rust_type: self.full_storage_type(
+                                    &self
+                                        .proto_field
+                                        .message
+                                        .scope
+                                        .get_file_and_mod(self.customize.clone()),
+                                ),
+                            };
                             cb(&v, w);
                         },
                     );
@@ -1910,10 +1903,10 @@ impl<'a> FieldGen<'a> {
         }
     }
 
-    pub fn write_message_write_field(&self, w: &mut CodeWriter, c: &Customize) {
+    pub fn write_message_write_field(&self, w: &mut CodeWriter) {
         match self.kind {
             FieldKind::Singular(ref s) => {
-                self.write_if_let_self_field_is_some(s, w, c,|v, w| {
+                self.write_if_let_self_field_is_some(s, w, |v, w| {
                     self.write_write_element(w, "os", &v);
                 });
             }
@@ -1968,7 +1961,7 @@ impl<'a> FieldGen<'a> {
     pub fn write_message_compute_field_size(&self, sum_var: &str, w: &mut CodeWriter, c: &Customize) {
         match self.kind {
             FieldKind::Singular(ref s) => {
-                self.write_if_let_self_field_is_some(s, w, c, |v, w| {
+                self.write_if_let_self_field_is_some(s, w, |v, w| {
                     match field_type_size(self.proto_type) {
                         Some(s) => {
                             let tag_size = self.tag_size();

@@ -934,25 +934,6 @@ where
     }
 }
 
-pub fn read_message<M, S>(
-    wire_type: WireType,
-    is: &mut CodedInputStream,
-) -> ProtobufResult<M>
-    where
-        M: Message,
-        S: StrictMerge<M>,
-{
-    match wire_type {
-        WireTypeLengthDelimited => {
-            is.incr_recursion()?;
-            let res = is.strict_merge_message::<S, M>();
-            is.decr_recursion();
-            res
-        }
-        _ => Err(unexpected_wire_type(wire_type)),
-    }
-}
-
 fn skip_group(is: &mut CodedInputStream) -> ProtobufResult<()> {
     loop {
         let (_, wire_type) = is.read_tag_unpack()?;

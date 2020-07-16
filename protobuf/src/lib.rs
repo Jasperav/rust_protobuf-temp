@@ -7,8 +7,6 @@
 #![deny(intra_doc_link_resolution_failure)]
 #![cfg_attr(rustc_nightly, feature(specialization))]
 
-pub use strict_merge_derive::StrictMerge;
-
 #[cfg(feature = "bytes")]
 extern crate bytes;
 #[cfg(feature = "with-serde")]
@@ -18,12 +16,10 @@ extern crate serde;
 extern crate serde_derive;
 pub use crate::clear::Clear;
 pub use crate::core::parse_from_bytes;
-pub use crate::core::parse_from_bytes_strict;
 #[cfg(feature = "bytes")]
 pub use crate::core::parse_from_carllerche_bytes;
 pub use crate::core::parse_from_reader;
 pub use crate::core::Message;
-pub use crate::core::StrictMerge;
 pub use crate::enums::ProtobufEnum;
 pub use crate::enums::ProtobufEnumOrUnknown;
 pub use crate::oneof::Oneof;
@@ -38,7 +34,6 @@ pub use crate::unknown::UnknownValue;
 pub use crate::unknown::UnknownValueRef;
 pub use crate::unknown::UnknownValues;
 pub use crate::unknown::UnknownValuesIter;
-
 pub mod wire_format;
 #[cfg(feature = "bytes")]
 pub use crate::chars::Chars;

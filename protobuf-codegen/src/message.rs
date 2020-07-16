@@ -196,7 +196,7 @@ impl<'a> MessageGen<'a> {
         w.def_fn(&sig, |w| {
             // To have access to its methods but not polute the name space.
             for f in self.fields_except_oneof_and_group() {
-                f.write_message_write_field(w, c);
+                f.write_message_write_field(w);
             }
             self.write_match_each_oneof_variant(w, |w, variant, v, v_type| {
                 let v = RustValueTyped {
@@ -264,25 +264,20 @@ impl<'a> MessageGen<'a> {
         });
     }
 
-    fn write_field_accessors(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.remove_accessors.unwrap_or(false) {
-            return;
-        }
+    fn write_field_accessors(&self, w: &mut CodeWriter) {
         for f in self.fields_except_group() {
             f.write_message_single_field_accessors(w);
         }
     }
 
-    fn write_impl_self(&self, w: &mut CodeWriter, c: &Customize) {
+    fn write_impl_self(&self, w: &mut CodeWriter) {
         w.impl_self_block(&format!("{}", self.type_name), |w| {
             // TODO: new should probably be a part of Message trait
-            if c.no_option.is_none() {
-                w.pub_fn(&format!("new() -> {}", self.type_name), |w| {
-                    w.write_line("::std::default::Default::default()");
-                });
-            }
+            w.pub_fn(&format!("new() -> {}", self.type_name), |w| {
+                w.write_line("::std::default::Default::default()");
+            });
 
-            self.write_field_accessors(w, c);
+            self.write_field_accessors(w);
         });
     }
 
@@ -308,9 +303,6 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_merge_from(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-            return;
-        }
         let sig = format!(
             "merge_from(&mut self, is: &mut {}::CodedInputStream<'_>) -> {}::ProtobufResult<()>",
             protobuf_crate_path(&self.customize),
@@ -379,14 +371,7 @@ impl<'a> MessageGen<'a> {
         });
     }
 
-    fn write_is_initialized(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.skip_initialized_check.unwrap_or(false) {
-            w.def_fn(&format!("is_initialized(&self) -> bool"), |w| {
-                w.write_line("true");
-            });
-
-            return;
-        }
+    fn write_is_initialized(&self, w: &mut CodeWriter) {
         w.def_fn(&format!("is_initialized(&self) -> bool"), |w| {
             // TODO: use single loop
 
@@ -420,8 +405,10 @@ impl<'a> MessageGen<'a> {
             &format!("{}::Message", protobuf_crate_path(&self.customize)),
             &format!("{}", self.type_name),
             |w| {
-                self.write_is_initialized(w, c);
-                w.write_line("");
+                if c.skip_initialized_check.unwrap_or(false) {
+                    self.write_is_initialized(w);
+                    w.write_line("");
+                }
                 self.write_merge_from(w, c);
                 w.write_line("");
                 self.write_compute_size(w, c);
@@ -453,53 +440,6 @@ impl<'a> MessageGen<'a> {
                 self.write_default_instance(w);
             },
         );
-
-        // if !c.strict_values.unwrap_or(false) {
-        //     return;
-        // }
-        //
-        // w.impl_for_block(
-        //     &format!("{}::StrictMerge", protobuf_crate_path(&self.customize)),
-        //     &format!("{}", self.type_name),
-        //     |w| {
-        //         let sig = format!(
-        //             "strict_merge(is: &mut {}::CodedInputStream<'_>) -> {}::ProtobufResult<Self>",
-        //             protobuf_crate_path(&self.customize),
-        //             protobuf_crate_path(&self.customize),
-        //         );
-        //         w.def_fn(&sig, |w| {
-        //             for field in &self.fields {
-        //                 w.write_line(format!("let mut {}_opt = None;", field.rust_name.to_string()));
-        //             }
-        //
-        //             // TODO code...
-        //
-        //             let mandatory_fields: String = self.fields
-        //                 .iter()
-        //                 .map(|f| f.rust_name.to_string())
-        //                 .map(|f| f + "_opt.is_none()")
-        //                 // TODO: Filter out non-mandatory fields
-        //                 .collect::<Vec<_>>()
-        //                 .join(" || ");
-        //
-        //             if !mandatory_fields.is_empty() {
-        //                 w.if_stmt(format!("{}", &mandatory_fields), |w| {
-        //                     w.write_line("debug_assert!(false, \"Received empty field for mandatory field\");");
-        //                     w.write_line("return ::protobuf::ProtobufResult::Err(::protobuf::ProtobufError::WireError(::protobuf::error::WireError::IncorrectVarint));");
-        //                 });
-        //             }
-        //
-        //             w.write_line(format!("let gen_struct = {} {{", self.type_name));
-        //             // TODO: Something with optional fields
-        //             for field in &self.fields {
-        //                 // TODO: Above is a check if it's filled and now there are unwraps, maybe this can be nicer
-        //                 w.write_line(format!("{}: {}.unwrap(),", &field.rust_name, &field.rust_name));
-        //             }
-        //             w.write_line("};");
-        //
-        //             w.write_line("::std::result::Result::Ok(gen_struct)");
-        //         });
-        //     })
     }
 
     fn write_impl_value(&self, w: &mut CodeWriter) {
@@ -554,13 +494,10 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_struct(&self, w: &mut CodeWriter, customize: &Customize) {
-        let mut derive = vec!["Clone"];
+        let mut derive = vec!["Clone", "Default"];
         add_derives(&mut derive, &customize.derives, self.type_name.ident.to_string());
         if self.supports_derive_partial_eq() {
             derive.push("PartialEq");
-        }
-        if customize.strict_values.unwrap_or(false) {
-            derive.push("protobuf::StrictMerge");
         }
         if self.lite_runtime || customize.use_derive_debug.unwrap_or(false) {
             derive.push("Debug");
@@ -607,22 +544,18 @@ impl<'a> MessageGen<'a> {
         });
     }
 
-    fn write_impl_default_for_amp(&self, w: &mut CodeWriter, c: &Customize) {
+    fn write_impl_default_for_amp(&self, w: &mut CodeWriter) {
         w.impl_args_for_block(
             &["'a"],
             "::std::default::Default",
             &format!("&'a {}", self.type_name),
             |w| {
                 w.def_fn(&format!("default() -> &'a {}", self.type_name), |w| {
-                    if c.no_option.is_some() {
-                        w.write_line("unreachable!();");
-                    } else {
-                        w.write_line(&format!(
-                            "<{} as {}::Message>::default_instance()",
-                            self.type_name,
-                            protobuf_crate_path(&self.customize),
-                        ));
-                    }
+                    w.write_line(&format!(
+                        "<{} as {}::Message>::default_instance()",
+                        self.type_name,
+                        protobuf_crate_path(&self.customize),
+                    ));
                 });
             },
         );
@@ -646,7 +579,7 @@ impl<'a> MessageGen<'a> {
         self.write_struct(w, customize);
 
         w.write_line("");
-        self.write_impl_default_for_amp(w, customize);
+        self.write_impl_default_for_amp(w);
 
         if !self.supports_derive_partial_eq() {
             w.write_line("");
@@ -654,7 +587,7 @@ impl<'a> MessageGen<'a> {
         }
 
         w.write_line("");
-        self.write_impl_self(w, customize);
+        self.write_impl_self(w);
         w.write_line("");
         self.write_impl_message(w, customize);
         w.write_line("");

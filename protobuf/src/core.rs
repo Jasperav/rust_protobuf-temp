@@ -19,10 +19,6 @@ use crate::stream::WithCodedInputStream;
 use crate::stream::WithCodedOutputStream;
 use crate::unknown::UnknownFields;
 
-pub trait StrictMerge<M> {
-    fn strict_merge(is: &mut CodedInputStream) -> ProtobufResult<M>;
-}
-
 /// Trait implemented for all generated structs for protobuf messages.
 ///
 /// Also, generated messages implement `Clone + Default + PartialEq`
@@ -35,9 +31,7 @@ pub trait Message: fmt::Debug + Clear + Send + Sync + ProtobufValue {
     fn is_initialized(&self) -> bool;
 
     /// Update this message object with fields read from given stream.
-    fn merge_from(&mut self, is: &mut CodedInputStream) -> ProtobufResult<()> {
-        unimplemented!()
-    }
+    fn merge_from(&mut self, is: &mut CodedInputStream) -> ProtobufResult<()>;
 
     /// Write message to the stream.
     ///
@@ -294,10 +288,6 @@ pub fn parse_from<M: Message>(is: &mut CodedInputStream) -> ProtobufResult<M> {
     Ok(r)
 }
 
-pub fn parse_strictly_from<M: Message>(is: &mut CodedInputStream) -> ProtobufResult<M> where M: StrictMerge<M> {
-    M::strict_merge(is)
-}
-
 /// Parse message from reader.
 /// Parse stops on EOF or when error encountered.
 pub fn parse_from_reader<M: Message>(reader: &mut dyn Read) -> ProtobufResult<M> {
@@ -307,11 +297,6 @@ pub fn parse_from_reader<M: Message>(reader: &mut dyn Read) -> ProtobufResult<M>
 /// Parse message from byte array.
 pub fn parse_from_bytes<M: Message>(bytes: &[u8]) -> ProtobufResult<M> {
     bytes.with_coded_input_stream(|is| parse_from::<M>(is))
-}
-
-/// Parse message strictly from byte array.
-pub fn parse_from_bytes_strict<M: Message>(bytes: &[u8]) -> ProtobufResult<M> where M: StrictMerge<M> {
-    bytes.with_coded_input_stream(|is| parse_strictly_from::<M>(is))
 }
 
 /// Parse message from `Bytes` object.
