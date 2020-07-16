@@ -11,13 +11,13 @@ pub fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStre
     field.attrs.iter().filter(|f| f.path.segments.iter().find(|f| attr == &f.ident.to_string()).is_some()).map(|a| a.tokens.clone().into()).collect()
 }
 
-pub enum MapType {
-    OneOf,
-    // Fieldnumber
-    Simple(u32)
-}
-
 pub enum Proto<'a> {
+    // When merging from IS, the assignment is custom, e.g.:
+    // my_property = some_enum::case(...?);
+    //
+    // my_property = calculate_values -> ident
+    // some_enum::case -> this ident
+    OneOfCase(Ident),
     // Holds the declaration of values
     // so if this struct is derialized:
     // struct my_struct { my_value: i32 }

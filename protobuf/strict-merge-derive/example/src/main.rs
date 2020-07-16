@@ -11,8 +11,7 @@ fn main() {
         // o_double_default: 0.0,
         // _enum: ConversationCreateRespError::TOO_CLOSE_TO_OTHER_CONVERSATION,
         // o_enum: None,
-         //one_of: SomeResult::success(1 as f64),
-        o_one_of: None
+        one_of: SomeResult::success(1 as f64)
     };
 
         // double: 1.,
