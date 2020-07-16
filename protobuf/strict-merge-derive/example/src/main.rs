@@ -1,22 +1,18 @@
-#![feature(fmt_internals)]
-#![feature(libstd_sys_internals)]
-
 use protobuf::{parse_from_bytes_strict};
 use protobuf::StrictMerge;
-use crate::api::{Location, ConversationCreateRespError, Announcement};
+use crate::api::{Location, ConversationCreateRespError};
 use crate::api::some_enum::SomeResult;
 
 mod api;
 
 fn main() {
     let lo = Location {
-        double: 1.0,
-        o_double_default: 0.0,
-        _enum: ConversationCreateRespError::TOO_CLOSE_TO_OTHER_CONVERSATION,
-        o_enum: None,
-         one_of: SomeResult::success(1 as f64),
-        o_one_of: None,
-        message: Announcement { ts_created: 0 }
+        // double: 1.0,
+        // o_double_default: 0.0,
+        // _enum: ConversationCreateRespError::TOO_CLOSE_TO_OTHER_CONVERSATION,
+        // o_enum: None,
+         //one_of: SomeResult::success(1 as f64),
+        o_one_of: None
     };
 
         // double: 1.,

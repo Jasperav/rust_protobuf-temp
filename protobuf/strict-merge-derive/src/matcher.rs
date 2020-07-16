@@ -4,7 +4,7 @@ use proc_macro2::{TokenStream, Punct, Literal, Ident};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
 use crate::parser::{Prototype, FieldNumber, OneOfMapping, OneOfMapper};
-use crate::value_calculator::{Calculator, ValueCalculator, ProtobufEnum, ProtobufMessage};
+use crate::value_calculator::{Calculator, ValueCalculator, ProtobufEnum};
 use std::str::FromStr;
 
 pub fn find_attr(field: &Field, attr: &'static str) -> Vec<proc_macro::TokenStream> {
@@ -43,7 +43,6 @@ pub fn str_to_value_calculator(str: &str) -> Box<dyn ValueCalculator> {
         "oneof" => unimplemented!("Oneof is not supported"),
         "double" => Box::new(0 as f64),
         "enum" => Box::new(ProtobufEnum),
-        "message" => Box::new(ProtobufMessage),
         _ => unimplemented!("Nothing configured for type: {}", str)
     }
 }

@@ -19,7 +19,7 @@ pub struct Calculator<'a> {
 
 impl Calculator<'_> {
     pub fn calculate(self, t: Box<dyn ValueCalculator>) {
-        t.calculate(self.ident, self.map_type, self.is_option, self.type_without_opt, self.declaration, self.opt_checks, self.struct_gen, self.deserializer, self.compute_sizer, self.os_writer);
+        t.calculate(self.ident, self.map_type,  self.is_option, self.type_without_opt, self.declaration, self.opt_checks, self.struct_gen, self.deserializer, self.compute_sizer, self.os_writer);
     }
 }
 
@@ -50,8 +50,8 @@ pub trait ValueCalculator {
     // TODO: Maybe instead of all the arguments, pass in the calculator
     fn read(&self, ident: &Ident, type_without_opt: &TokenStream) -> TokenStream;
     // a tokenstream rather than an ident because self. is not allowed in an ident
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
-    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream;
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream) -> TokenStream;
+    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream) -> TokenStream;
     fn wire_check(&self) -> Option<TokenStream>;
     fn default_value(&self, ident: &TokenStream) -> Option<TokenStream>;
     // TODO: Maybe this can be removed and be replaced by default_value
@@ -124,8 +124,8 @@ pub trait ValueCalculator {
             ValueOption::Optional => quote! { e },
             ValueOption::MandatoryOptional | ValueOption::Mandatory => quote! { # ident_with_self },
         };
-        let size = self.size(&ident_some, &format_ident!("size"), field_number, &type_without_opt, is_option);
-        let write = self.write(&ident_some, field_number, &type_without_opt, is_option);
+        let size = self.size(&ident_some, &format_ident!("size"), field_number, &type_without_opt);
+        let write = self.write(&ident_some, field_number, &type_without_opt);
 
         let (compute_size, writer) = match self.check_has_not_default_value(&ident_with_self) {
             None => (quote! {
@@ -145,24 +145,27 @@ pub trait ValueCalculator {
                     }),
         };
 
-        if is_option {
-            compute_sizer.push(quote! {
-                            if let Some(#ident_some) = &#ident_with_self {
+        match &value_option {
+            ValueOption::Optional => {
+                compute_sizer.push(quote! {
+                            if let Some(#ident_some) = #ident_with_self {
                                 #compute_size
                             }
                         });
-            os_writer.push(quote! {
-                            if let Some(#ident_some) = &#ident_with_self {
+                os_writer.push(quote! {
+                            if let Some(#ident_some) = #ident_with_self {
                                 #writer
                             }
                         });
-        } else {
-            compute_sizer.push(quote! {
+            }
+            ValueOption::MandatoryOptional | ValueOption::Mandatory => {
+                compute_sizer.push(quote! {
                             #compute_size
                         });
-            os_writer.push(quote! {
+                os_writer.push(quote! {
                             #writer
                         });
+            }
         }
 
         match map_type {
@@ -185,18 +188,8 @@ pub trait ValueCalculator {
     }
 }
 
-
-fn add_ampersand(is_reference: bool) -> TokenStream {
-    if is_reference {
-        quote! {}
-    } else {
-        quote! { & }
-    }
-}
-
 impl OneOfMapper {
-    fn loop_through_cases<T: Fn(&OneOfMapping, &TokenStream) -> TokenStream>(&self, ident: &TokenStream, type_without_opt: &TokenStream, is_reference: bool, gen_ts: T) -> TokenStream {
-        let ampersand = add_ampersand(is_reference);
+    fn loop_through_cases<T: Fn(&OneOfMapping, &TokenStream) -> TokenStream>(&self, ident: &TokenStream, type_without_opt: &TokenStream, gen_ts: T) -> TokenStream {
         let mut ts = vec![];
         let dummy_ident = quote! { dummy_ident };
 
@@ -206,14 +199,14 @@ impl OneOfMapper {
             let gen = gen_ts(&mapping, &dummy_ident);
 
             ts.push(quote! {
-               &#type_without_opt::#enum_case(#dummy_ident) => {
+               #type_without_opt::#enum_case(#dummy_ident) => {
                    #gen
                }
             });
         }
 
         quote! {
-            match #ampersand#ident {
+            match #ident {
                 #(#ts),*
             }
         }
@@ -240,9 +233,9 @@ impl ValueCalculator for OneOfMapper {
         ts
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        self.loop_through_cases(ident, type_without_opt,is_reference, |mapping, dummy_ident| {
-            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number, type_without_opt, false);
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream) -> TokenStream {
+        self.loop_through_cases(ident, type_without_opt, |mapping, dummy_ident| {
+            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number, type_without_opt);
 
             quote! {
                 #size
@@ -250,9 +243,9 @@ impl ValueCalculator for OneOfMapper {
         })
     }
 
-    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        self.loop_through_cases(ident, type_without_opt, is_reference, |mapping, dummy_ident| {
-            let write = mapping.proto_mapping.write(dummy_ident, mapping.field_number, type_without_opt, false);
+    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream) -> TokenStream {
+        self.loop_through_cases(ident, type_without_opt, |mapping, dummy_ident| {
+            let write = mapping.proto_mapping.write(dummy_ident, mapping.field_number, type_without_opt);
 
             quote! {
                 #write
@@ -273,48 +266,7 @@ impl ValueCalculator for OneOfMapper {
     }
 }
 
-
-pub fn add_deref(is_reference: bool) -> TokenStream {
-    if is_reference {
-        quote! { * }
-    } else {
-        quote! {}
-    }
-}
-
-
-pub struct ProtobufMessage;
-
-impl ValueCalculator for ProtobufMessage {
-    fn read(&self, ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
-        quote! {
-            ::protobuf::rt::read_message::<#type_without_opt, _>(wire_type, is, &mut self.auth_token)?;
-        }
-    }
-
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        unimplemented!()
-    }
-
-    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        unimplemented!()
-    }
-
-    fn wire_check(&self) -> Option<TokenStream> {
-        unimplemented!()
-    }
-
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        unimplemented!()
-    }
-
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        unimplemented!()
-    }
-}
-
 pub struct ProtobufEnum;
-
 
 impl ValueCalculator for ProtobufEnum {
     fn read(&self, ident: &Ident, _: &TokenStream) -> TokenStream {
@@ -323,18 +275,16 @@ impl ValueCalculator for ProtobufEnum {
         }
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        let deref = add_deref(is_reference);
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream) -> TokenStream {
         quote! {
             debug_assert_ne!(0, #ident.value());
-            #size_ident += ::protobuf::rt::enum_size_strict(#field_number, #deref#ident);
+            #size_ident += ::protobuf::rt::enum_size_strict(#field_number, #ident);
         }
     }
 
-    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        let deref = add_deref(is_reference);
+    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream) -> TokenStream {
         quote! {
-            os.write_enum(#field_number, ::protobuf::ProtobufEnumStrict::value(#deref#ident))?;
+            os.write_enum(#field_number, ::protobuf::ProtobufEnumStrict::value(&#ident))?;
         }
     }
 
@@ -360,13 +310,13 @@ impl ValueCalculator for f64 {
         }
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
+    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream) -> TokenStream {
         quote! {
             #size_ident += 9;
         }
     }
 
-    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
+    fn write(&self, ident: &TokenStream, field_number: u32, type_without_opt: &TokenStream) -> TokenStream {
         quote! {
             os.write_double(#field_number, #ident)?;
         }

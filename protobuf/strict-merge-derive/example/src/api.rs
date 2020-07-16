@@ -3,30 +3,26 @@ use protobuf::error::ProtobufError::WireError;
 
 #[derive(protobuf::StrictMerge, Debug, PartialEq)]
 pub struct Location {
-    #[prototype = "double"]
-    #[fieldnumber = 1]
-    pub double: f64,
-    #[prototype = "double"]
-    #[fieldnumber = 2]
-    pub o_double_default: f64,
-    #[prototype = "enum"]
-    #[fieldnumber = 3]
-    pub _enum: crate::api::ConversationCreateRespError,
-    #[prototype = "enum"]
-    #[fieldnumber = 4]
-    pub o_enum: Option<crate::api::ConversationCreateRespError>,
-    #[prototype = "oneof"]
-    #[oneof = "success|double|5"]
-    #[oneof = "error|enum|6"]
-    pub one_of: some_enum::SomeResult,
+    // #[prototype = "double"]
+    // #[fieldnumber = 1]
+    // pub double: f64,
+    // #[prototype = "double"]
+    // #[fieldnumber = 2]
+    // pub o_double_default: f64,
+    // #[prototype = "enum"]
+    // #[fieldnumber = 3]
+    // pub _enum: crate::api::ConversationCreateRespError,
+    // #[prototype = "enum"]
+    // #[fieldnumber = 4]
+    // pub o_enum: Option<crate::api::ConversationCreateRespError>,
+    // #[prototype = "oneof"]
+    // #[oneof = "success|double|5"]
+    // #[oneof = "error|enum|6"]
+    // pub one_of: some_enum::SomeResult,
     #[prototype = "oneof"]
     #[oneof = "success|double|7"]
     #[oneof = "error|enum|8"]
     pub o_one_of: Option<some_enum::SomeResult>,
-    #[prototype = "message"]
-    #[fieldnumber = 9]
-    pub message: Announcement,
-
     // #[prototype = "uint32"]
     // #[fieldnumber = 3]
     // pub _u32: u32,
@@ -63,15 +59,6 @@ pub struct Location {
 
 impl Location {
 
-}
-
-
-
-#[derive(protobuf::StrictMerge, Debug, PartialEq)]
-pub struct Announcement {
-    #[prototype = "sfixed64"]
-    #[number = 1]
-    pub ts_created: i64,
 }
 
 pub mod some_enum {
@@ -116,7 +103,7 @@ pub enum ConversationCreateRespError {
 
 // TODO: Derive
 impl ProtobufEnumStrict for ConversationCreateRespError {
-    fn value(self) -> i32 {
+    fn value(&self) -> i32 {
         match self {
             ConversationCreateRespError::CONVERSATION_CREATE_RESP_ERROR_NOT_SET => {
                 debug_assert!(false, "Unexpected found zero value in ConversationCreateRespError");
