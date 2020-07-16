@@ -19,7 +19,7 @@ use crate::misc::remove_lifetime_mut;
 use crate::unknown::UnknownFields;
 use crate::unknown::UnknownValue;
 use crate::unknown::UnknownValueRef;
-use crate::{varint, ProtobufEnumStrict};
+use crate::varint;
 use crate::wire_format;
 use crate::zigzag::decode_zig_zag_32;
 use crate::zigzag::decode_zig_zag_64;
@@ -368,12 +368,6 @@ impl<'a> CodedInputStream<'a> {
     /// Read `bool`
     pub fn read_bool(&mut self) -> ProtobufResult<bool> {
         self.read_raw_varint32().map(|v| v != 0)
-    }
-
-    pub fn read_enum_strict<E: ProtobufEnumStrict>(&mut self) -> ProtobufResult<E> {
-        let i = self.read_int32()?;
-
-        E::from_i32(i)
     }
 
     /// Read `enum` as `ProtobufEnum`

@@ -2,7 +2,7 @@ use proc_macro2::{Ident, TokenStream};
 use crate::matcher::Proto;
 use quote::quote;
 use quote::format_ident;
-use crate::parser::{OneOfMapping, OneOfMapper};
+use crate::parser::OneOfMapping;
 
 pub struct Calculator<'a> {
     pub proto: Proto<'a>,
@@ -10,81 +10,59 @@ pub struct Calculator<'a> {
     pub ident: &'a Ident,
     pub deserializer: &'a mut Vec<TokenStream>,
     pub compute_sizer: &'a mut Vec<TokenStream>,
-    pub os_writer: &'a mut Vec<TokenStream>,
+    pub os_writer: &'a mut Vec<TokenStream>
 }
 
 impl Calculator<'_> {
-    pub fn calculate(self, t: Box<dyn ValueCalculator>) {
-        t.calculate(self.proto, self.field_number, self.ident, self.deserializer, self.compute_sizer, self.os_writer);
+    pub fn calculate<T: ValueCalculator>(self, t: T) {
+        T::calculate(self.proto, self.field_number, self.ident, &t, self.deserializer, self.compute_sizer, self.os_writer);
     }
-}
-
-fn add_deserialization(field_number: u32, assign: TokenStream) -> TokenStream {
-    quote! {
-        #field_number => {
-            debug_assert!(processed_field_indexes.insert(#field_number), "Double processed field index found for matching field {} (note that fields indexes start with 1, not 0)", #field_number);
-            #assign
-        }
-    }
-}
-
-pub enum ValueOption {
-    Optional,
-    MandatoryOptional,
-    Mandatory
 }
 
 pub trait ValueCalculator {
-    fn read(&self, ident: &Ident) -> TokenStream;
-    // a tokenstream rather than an ident because self. is not allowed in an ident
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32) -> TokenStream;
-    fn write(&self, ident: &TokenStream, field_number: u32) -> TokenStream;
-    fn wire_check(&self) -> Option<TokenStream>;
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream>;
+    fn read(&self) -> TokenStream;
+    fn size(ident: &TokenStream) -> TokenStream;
+    fn write(field_number: u32, ident: &TokenStream) -> TokenStream;
+    fn wire_check() -> TokenStream;
+    fn default_value(ident: &TokenStream) -> Option<TokenStream>;
     // TODO: Maybe this can be removed and be replaced by default_value
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream>;
+    fn check_has_not_default_value(ident: &TokenStream) -> Option<TokenStream>;
 
-    fn calculate(
-        &self,
-        proto: Proto,
-        field_number: u32,
-        ident: &Ident,
-        deserializer: &mut Vec<TokenStream>,
-        compute_sizer: &mut Vec<TokenStream>,
-        os_writer: &mut Vec<TokenStream>) {
+    fn calculate<T: ValueCalculator>(proto: Proto,
+                 field_number: u32,
+                 ident: &Ident,
+                 value_calculator: &T,
+                 deserializer: &mut Vec<TokenStream>,
+                 compute_sizer: &mut Vec<TokenStream>,
+                 os_writer: &mut Vec<TokenStream>) {
         // TODO: Not sure how to name this
         let another_ident = match &proto {
-            Proto::OneOfCase(_) => quote! { #ident },
-            Proto::Simple(..) => quote! { self.#ident },
+            Proto::OneOf(_) => quote! { #ident },
+            Proto::Simple(_, _, _) => quote! { self.#ident },
         };
 
-        let size = self.size(&another_ident, &format_ident!("size"), field_number);
-        let write = self.write(&another_ident, field_number);
-        let reader = self.read(ident);
-        let mut assign = self.wire_check().map(|w| quote! {
-            if wire_type != ::protobuf::wire_format::#w {
-                return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-            }
-        }).unwrap_or(TokenStream::new());
+        let size = Self::size(&another_ident);
+        let write = Self::write(field_number, &another_ident);
+        let reader = Self::read(value_calculator);
+        let mut assign = Self::wire_check();
 
         match proto {
-            Proto::OneOfCase(enum_case) => {
+            Proto::OneOf(enum_case) => {
                 compute_sizer.push(size);
                 os_writer.push(write);
                 assign.extend(quote! {
                     #ident = #enum_case(#reader);
                 });
             }
-            Proto::Simple(declaration, opt_checks, struct_gen, one_of_mapper) => {
-                let value_option;
-                let has_optional_type = ident.to_string().starts_with("o_");
-                let ts = match self.default_value(&another_ident) {
+            Proto::Simple(declaration, opt_checks, struct_gen) => {
+                let is_option;
+                let is_mandatory;
+                let ts = match Self::default_value(&another_ident) {
                     None => {
                         // TODO: More user friendly
-                        if has_optional_type {
-                            value_option = ValueOption::Optional
-                        } else {
-                            value_option = ValueOption::MandatoryOptional;
+                        if !ident.to_string().starts_with("o_") {
+                            is_option = true;
+                            is_mandatory = false;
                             opt_checks.push(quote! {
                                 if #ident.is_none() {
                                     debug_assert!(false, "Unexpected empty optional found while deserializing property {}", stringify!(#ident));
@@ -92,13 +70,17 @@ pub trait ValueCalculator {
                                     return ::protobuf::ProtobufResult::Err(::protobuf::ProtobufError::WireError(::protobuf::error::WireError::IncorrectVarint));
                                 }
                             });
+                        } else {
+                            is_option = false;
+                            is_mandatory = true;
                         }
                         quote! {
                             None
                         }
                     }
                     Some(v) => {
-                        value_option = ValueOption::Mandatory;
+                        is_option = false;
+                        is_mandatory = true;
                         v
                     }
                 };
@@ -107,13 +89,35 @@ pub trait ValueCalculator {
                     #ident = #ts
                 });
 
-                let ts = self.check_has_not_default_value(&another_ident);
+                let ident = if is_option {
+                    assign.extend(quote! {
+                        #ident = Some(#reader);
+                    });
+                    format_ident!("e")
+                } else {
+                    assign.extend(quote! {
+                        #ident = #reader;
+                    });
+                    ident.clone()
+                };
+
+                if is_mandatory && is_option {
+                    struct_gen.push(quote! {
+                        #ident.unwrap()
+                    });
+                } else {
+                    struct_gen.push(quote! {
+                        #ident
+                    });
+                }
+
+                let ts = Self::check_has_not_default_value(&another_ident);
 
                 let (compute_size, writer) = match ts {
                     None => (quote! {
                         #size
                     },
-                             quote! {
+                     quote! {
                         #write
                      }),
                     Some(ts) => (quote! {
@@ -127,174 +131,65 @@ pub trait ValueCalculator {
                     }),
                 };
 
-                // TODO: To many match's on the same value
-                match &value_option {
-                    ValueOption::Optional | ValueOption::Mandatory => struct_gen.push(quote! {
-                        #ident
-                    }),
-                    ValueOption::MandatoryOptional => struct_gen.push(quote! {
-                        #ident.unwrap()
-                    }),
-                }
-
-                match &value_option {
-                    ValueOption::Optional => {
-                        compute_sizer.push(quote! {
-                            if let Some(e) = #ident {
-                                #compute_size
-                            }
-                        });
-                        os_writer.push(quote! {
-                            if let Some(e) = #ident {
-                                #writer
-                            }
-                        });
-                    },
-                    ValueOption::MandatoryOptional | ValueOption::Mandatory =>  {
-                        compute_sizer.push(quote! {
+                if is_option {
+                    compute_sizer.push(quote! {
+                        if let Some(e) = #ident {
                             #compute_size
-                        });
-                        os_writer.push(quote! {
-                            #writer
-                        });
-                    }
-                }
-
-                let prefix_assign = match one_of_mapper {
-                    None => {
-                        match &value_option {
-                            ValueOption::Optional | ValueOption::MandatoryOptional => assign.extend(quote! {
-                                #ident = Some(#reader);
-                            }),
-                            ValueOption::Mandatory => assign.extend(quote! {
-                                #ident = #reader;
-                            }),
                         }
-
-                        deserializer.push(add_deserialization(field_number, assign));
-                    }
-                    Some(o) => {
-                        deserializer.push(reader);
-                    }
-                };
+                    });
+                    os_writer.push(quote! {
+                        if let Some(e) = #ident {
+                            #writer
+                        }
+                    });
+                } else {
+                    compute_sizer.push(quote! {
+                        #compute_size
+                    });
+                    os_writer.push(quote! {
+                        #writer
+                    });
+                }
             }
         };
+
+        deserializer.push(quote! {
+            #field_number => {
+                debug_assert!(processed_field_indexes.insert(#field_number), "Double processed field index found for matching field {} (note that fields indexes start with 1, not 0)", #field_number);
+                #assign
+            }
+        });
     }
 }
 
-impl OneOfMapper {
-    fn loop_through_cases<T: Fn(&OneOfMapping, &TokenStream) -> TokenStream>(&self, ident: &TokenStream, gen_ts: T) -> TokenStream {
-        let mut ts = vec![];
-        let dummy_ident = quote! { "dummy_ident" };
-        let full_type = &self.full_type;
+impl ValueCalculator for Vec<OneOfMapping> {
+    fn read(&self) -> TokenStream {
+        let mut tokens = TokenStream::new();
 
-        for mapping in self.mapping.iter() {
-            let field_number = mapping.field_number;
-            let enum_case = &mapping.enum_case;
-            let gen = gen_ts(&mapping, &dummy_ident);
-
-            ts.push(quote! {
-               #full_type::#enum_case(ref #dummy_ident) {
-                   gen
-               }
-            });
+        for attr in self.iter() {
+            attr.
         }
 
-        quote! {
-            match #ident {
-                #(#ts),*
-            }
-        }
-    }
-}
-
-pub struct ProtobufEnum;
-
-impl ValueCalculator for ProtobufEnum {
-    fn read(&self, ident: &Ident) -> TokenStream {
-        quote! {
-            is.read_enum_strict()?
-        }
+        panic!();
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32) -> TokenStream {
-        quote! {
-            debug_assert_ne!(0, #ident.value());
-            #size_ident += ::protobuf::rt::enum_size_strict(#field_number, #ident);
-        }
+    fn size(ident: &TokenStream) -> TokenStream {
+        unimplemented!()
     }
 
-    fn write(&self, ident: &TokenStream, field_number: u32) -> TokenStream {
-        quote! {
-            os.write_enum(#field_number, ::protobuf::ProtobufEnumStrict::value(&#ident))?;
-        }
+    fn write(field_number: u32, ident: &TokenStream) -> TokenStream {
+        unimplemented!()
     }
 
-    fn wire_check(&self) -> Option<TokenStream> {
-        Some(quote! {
-            WireTypeVarint
-        })
+    fn wire_check() -> TokenStream {
+        quote! { }
     }
 
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
+    fn default_value(ident: &TokenStream) -> Option<TokenStream> {
         None
     }
 
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        None
-    }
-}
-
-impl ValueCalculator for OneOfMapper {
-    fn read(&self, ident: &Ident) -> TokenStream {
-        let full_type = &self.full_type;
-        let mut ts = TokenStream::new();
-
-        for mapping in self.mapping.iter() {
-            let wire_check = mapping.proto_mapping.wire_check();
-            let read = mapping.proto_mapping.read(ident);
-            let enum_case = &mapping.enum_case;
-
-            let assign = quote! {
-                #wire_check
-                #ident = Some(#full_type::#enum_case(#read));
-            };
-
-            ts.extend(add_deserialization(mapping.field_number, assign));
-        }
-
-        ts
-    }
-
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32) -> TokenStream {
-        self.loop_through_cases(ident, |mapping, dummy_ident| {
-            let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number);
-
-            quote! {
-                #size_ident += #size
-            }
-        })
-    }
-
-    fn write(&self, ident: &TokenStream, field_number: u32) -> TokenStream {
-        self.loop_through_cases(ident, |mapping, dummy_ident| {
-            let write = mapping.proto_mapping.write(dummy_ident, mapping.field_number);
-
-            quote! {
-                #write
-            }
-        })
-    }
-
-    fn wire_check(&self) -> Option<TokenStream> {
-        None
-    }
-
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        None
-    }
-
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
+    fn check_has_not_default_value(ident: &TokenStream) -> Option<TokenStream> {
         Some(quote! {
             #ident.is_none()
         })
@@ -302,39 +197,39 @@ impl ValueCalculator for OneOfMapper {
 }
 
 impl ValueCalculator for f64 {
-    fn read(&self, ident: &Ident) -> TokenStream {
+    fn read(&self) -> TokenStream {
         quote! {
             is.read_double()?
         }
     }
 
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32) -> TokenStream {
+    fn size(ident: &TokenStream) -> TokenStream {
         quote! {
-            #size_ident += 9;
+            size += 9;
         }
     }
 
-    fn write(&self, ident: &TokenStream, field_number: u32) -> TokenStream {
+    fn write(field_number: u32, ident: &TokenStream) -> TokenStream {
         quote! {
             os.write_double(#field_number, #ident)?;
         }
     }
 
-    fn wire_check(&self) -> Option<TokenStream> {
-        Some(quote! {
-            WireTypeFixed64
-        })
+    fn wire_check() -> TokenStream {
+        quote! {
+            if wire_type != ::protobuf::wire_format::WireTypeFixed64 {
+                return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+            }
+        }
     }
 
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
+    fn default_value(ident: &TokenStream) -> Option<TokenStream> {
         Some(quote! {
             0 as f64
         })
     }
 
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        Some(quote! {
-            #ident != 0 as f64
-        })
+    fn check_has_not_default_value(ident: &TokenStream) -> Option<TokenStream> {
+        None
     }
 }

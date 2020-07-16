@@ -1,5 +1,5 @@
 [package]
-name = "example"
+name = "descriptor_type"
 version = "0.1.0"
 authors = ["Jasper Visser <jasper.visser@keylane.com>"]
 edition = "2018"

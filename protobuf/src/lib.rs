@@ -25,7 +25,6 @@ pub use crate::core::parse_from_reader;
 pub use crate::core::Message;
 pub use crate::core::StrictMerge;
 pub use crate::enums::ProtobufEnum;
-pub use crate::enums::ProtobufEnumStrict;
 pub use crate::enums::ProtobufEnumOrUnknown;
 pub use crate::oneof::Oneof;
 pub use crate::repeated::RepeatedField;
