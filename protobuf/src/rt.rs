@@ -937,17 +937,18 @@ where
     }
 }
 
-pub fn read_message<M>(
+pub fn read_message<M, S>(
     wire_type: WireType,
     is: &mut CodedInputStream,
 ) -> ProtobufResult<M>
     where
-        M: StrictMerge<M>,
+        M: Message,
+        S: StrictMerge<M>,
 {
     match wire_type {
         WireTypeLengthDelimited => {
             is.incr_recursion()?;
-            let res = is.strict_merge_message::<M>();
+            let res = is.strict_merge_message::<S, M>();
             is.decr_recursion();
             res
         }
@@ -1055,18 +1056,6 @@ where
     os.write_tag(field_number, WireType::WireTypeLengthDelimited)?;
     os.write_raw_varint32(message.compute_size())?;
     message.write_to_with_cached_sizes(os)
-}
-
-pub fn write_strict_message_field_with_cached_size<M>(
-    field_number: u32,
-    message: &M,
-    os: &mut CodedOutputStream,
-) -> ProtobufResult<()>
-    where M: StrictMerge<M>
-{
-    os.write_tag(field_number, WireType::WireTypeLengthDelimited)?;
-    os.write_raw_varint32(message.compute_size() as u32)?;
-    message.write_to_os(os)
 }
 
 /// Read `map` field.
