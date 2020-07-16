@@ -110,23 +110,4 @@ pub struct Compound {
     #[fieldnumber = 27]
     #[tagsize = 2]
     pub bool_false: bool,
-    #[prototype = "repeated"]
-    #[repeatedinner = "bool"]
-    #[fieldnumber = 28]
-    #[tagsize = 2]
-    pub vec_bool_default: ::std::vec::Vec<bool>,
-    #[prototype = "repeated"]
-    #[repeatedinner = "bool"]
-    #[fieldnumber = 29]
-    #[tagsize = 2]
-    pub vec_bool_o_default: ::std::vec::Vec<bool>,
-
-    #[prototype = "string"]
-    #[fieldnumber = 30]
-    #[tagsize = 1]
-    pub string_default: std::string::String,
-    #[prototype = "string"]
-    #[fieldnumber = 31]
-    #[tagsize = 1]
-    pub string_default_o_empty: std::string::String,
 }

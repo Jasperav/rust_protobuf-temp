@@ -4,7 +4,6 @@ pub mod protobuf_u8;
 pub mod message;
 pub mod repeated;
 pub mod protobuf_bool;
-pub mod protobuf_string;
 pub mod one_of;
 pub mod value_calculator;
 pub use value_calculator::*;

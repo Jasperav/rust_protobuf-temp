@@ -43,6 +43,6 @@ impl ValueCalculator for bool {
     }
 
     fn read_repeated(&self) -> (RepeatedComputer, TokenStream) {
-        (RepeatedComputer::UseLen)
+        unimplemented!()
     }
 }
