@@ -41,7 +41,9 @@ fn main() {
         vec_enum_default: vec![AnEnum::ACase, AnEnum::AnotherCase],
         vec_enum_o_empty: vec![],
         bool_true: true,
-        bool_false: false
+        bool_false: false,
+        string_default: "SomeString".to_string(),
+        string_default_o_empty: "".to_string()
     };
     let first_inner = org_message::Inner {
         double_default: 1 as f64,
@@ -75,6 +77,8 @@ fn main() {
         vec_enum_o_empty: vec![],
         bool_true: true,
         bool_false: false,
+        string_default: "SomeString".to_string(),
+        string_default_o_empty: "".to_string(),
         unknown_fields: Default::default(),
         cached_size: Default::default(),
     };

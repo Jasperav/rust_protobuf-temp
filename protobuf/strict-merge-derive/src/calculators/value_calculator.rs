@@ -52,7 +52,8 @@ pub struct RepeatedCustomComputer {
 
 pub enum RepeatedComputer {
     Reuse,
-    UseLen,
+    // Fill with property as seen in method field_type_size in the protobuf crate
+    UseLen(i32),
     Custom(Box<dyn Fn(RepeatedCustomComputer) -> TokenStream>)
 }
 

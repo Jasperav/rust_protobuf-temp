@@ -46,6 +46,10 @@ pub struct Compound {
     pub vec_enum_o_empty: ::std::vec::Vec<::protobuf::ProtobufEnumOrUnknown<AnEnum>>,
     pub bool_true: bool,
     pub bool_false: bool,
+    pub vec_bool_default: ::std::vec::Vec<bool>,
+    pub vec_bool_o_default: ::std::vec::Vec<bool>,
+    pub string_default: ::std::string::String,
+    pub string_default_o_empty: ::std::string::String,
     // message oneof groups
     pub one_of_double: ::std::option::Option<compound::One_of_double>,
     pub one_of_enum: ::std::option::Option<compound::One_of_enum>,
@@ -542,6 +546,18 @@ impl ::protobuf::Message for Compound {
                     }
                     self.bool_false = is.read_bool()?;
                 },
+                28 => {
+                    ::protobuf::rt::read_repeated_bool_into(wire_type, is, &mut self.vec_bool_default)?;
+                },
+                29 => {
+                    ::protobuf::rt::read_repeated_bool_into(wire_type, is, &mut self.vec_bool_o_default)?;
+                },
+                30 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.string_default)?;
+                },
+                31 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.string_default_o_empty)?;
+                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -608,6 +624,14 @@ impl ::protobuf::Message for Compound {
         }
         if self.bool_false != false {
             my_size += 3;
+        }
+        my_size += 3 * self.vec_bool_default.len() as u32;
+        my_size += 3 * self.vec_bool_o_default.len() as u32;
+        if !self.string_default.is_empty() {
+            my_size += ::protobuf::rt::string_size(30, &self.string_default);
+        }
+        if !self.string_default_o_empty.is_empty() {
+            my_size += ::protobuf::rt::string_size(31, &self.string_default_o_empty);
         }
         if let ::std::option::Option::Some(ref v) = self.one_of_double {
             match v {
@@ -710,6 +734,18 @@ impl ::protobuf::Message for Compound {
         }
         if self.bool_false != false {
             os.write_bool(27, self.bool_false)?;
+        }
+        for v in &self.vec_bool_default {
+            os.write_bool(28, *v)?;
+        };
+        for v in &self.vec_bool_o_default {
+            os.write_bool(29, *v)?;
+        };
+        if !self.string_default.is_empty() {
+            os.write_string(30, &self.string_default)?;
+        }
+        if !self.string_default_o_empty.is_empty() {
+            os.write_string(31, &self.string_default_o_empty)?;
         }
         if let ::std::option::Option::Some(ref v) = self.one_of_double {
             match v {
@@ -925,6 +961,26 @@ impl ::protobuf::Message for Compound {
                 |m: &Compound| { &m.bool_false },
                 |m: &mut Compound| { &mut m.bool_false },
             ));
+            fields.push(::protobuf::reflect::rt::make_vec_accessor::<_, ::protobuf::reflect::types::ProtobufTypeBool>(
+                "vec_bool_default",
+                |m: &Compound| { &m.vec_bool_default },
+                |m: &mut Compound| { &mut m.vec_bool_default },
+            ));
+            fields.push(::protobuf::reflect::rt::make_vec_accessor::<_, ::protobuf::reflect::types::ProtobufTypeBool>(
+                "vec_bool_o_default",
+                |m: &Compound| { &m.vec_bool_o_default },
+                |m: &mut Compound| { &mut m.vec_bool_o_default },
+            ));
+            fields.push(::protobuf::reflect::rt::make_simple_field_accessor::<_, ::protobuf::reflect::types::ProtobufTypeString>(
+                "string_default",
+                |m: &Compound| { &m.string_default },
+                |m: &mut Compound| { &mut m.string_default },
+            ));
+            fields.push(::protobuf::reflect::rt::make_simple_field_accessor::<_, ::protobuf::reflect::types::ProtobufTypeString>(
+                "string_default_o_empty",
+                |m: &Compound| { &m.string_default_o_empty },
+                |m: &mut Compound| { &mut m.string_default_o_empty },
+            ));
             ::protobuf::reflect::MessageDescriptor::new::<Compound>(
                 "Compound",
                 fields,
@@ -968,6 +1024,10 @@ impl ::protobuf::Clear for Compound {
         self.vec_enum_o_empty.clear();
         self.bool_true = false;
         self.bool_false = false;
+        self.vec_bool_default.clear();
+        self.vec_bool_o_default.clear();
+        self.string_default.clear();
+        self.string_default_o_empty.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1186,7 +1246,7 @@ impl ::protobuf::reflect::ProtobufValue for AnEnum {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x11org_message.proto\x12\x0fbenji.infra.req\"\xb3\x0b\n\x08Compound\
+    \n\x11org_message.proto\x12\x0fbenji.infra.req\"\xe6\x0c\n\x08Compound\
     \x12%\n\x0edouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault\x12,\n\
     \x12double_non_default\x18\x02\x20\x01(\x01R\x10doubleNonDefault\x12:\n\
     \x0cenum_default\x18\x03\x20\x01(\x0e2\x17.benji.infra.req.AnEnumR\x0ben\
@@ -1216,11 +1276,15 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x20\x03(\x0e2\x17.benji.infra.req.AnEnumR\x0evecEnumDefault\x12@\n\
     \x10vec_enum_o_empty\x18\x19\x20\x03(\x0e2\x17.benji.infra.req.AnEnumR\r\
     vecEnumOEmpty\x12\x1b\n\tbool_true\x18\x1a\x20\x01(\x08R\x08boolTrue\x12\
-    \x1d\n\nbool_false\x18\x1b\x20\x01(\x08R\tboolFalseB\x0f\n\rone_of_doubl\
-    eB\r\n\x0bone_of_enumB\x10\n\x0eone_of_message\".\n\x05Inner\x12%\n\x0ed\
-    ouble_default\x18\x01\x20\x01(\x01R\rdoubleDefault*3\n\x06AnEnum\x12\x0b\
-    \n\x07NOT_SET\x10\0\x12\n\n\x06A_CASE\x10\x01\x12\x10\n\x0cANOTHER_CASE\
-    \x10\x02b\x06proto3\
+    \x1d\n\nbool_false\x18\x1b\x20\x01(\x08R\tboolFalse\x12(\n\x10vec_bool_d\
+    efault\x18\x1c\x20\x03(\x08R\x0evecBoolDefault\x12+\n\x12vec_bool_o_defa\
+    ult\x18\x1d\x20\x03(\x08R\x0fvecBoolODefault\x12%\n\x0estring_default\
+    \x18\x1e\x20\x01(\tR\rstringDefault\x123\n\x16string_default_o_empty\x18\
+    \x1f\x20\x01(\tR\x13stringDefaultOEmptyB\x0f\n\rone_of_doubleB\r\n\x0bon\
+    e_of_enumB\x10\n\x0eone_of_message\".\n\x05Inner\x12%\n\x0edouble_defaul\
+    t\x18\x01\x20\x01(\x01R\rdoubleDefault*3\n\x06AnEnum\x12\x0b\n\x07NOT_SE\
+    T\x10\0\x12\n\n\x06A_CASE\x10\x01\x12\x10\n\x0cANOTHER_CASE\x10\x02b\x06\
+    proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::Lazy::INIT;
