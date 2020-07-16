@@ -3,7 +3,7 @@ use quote::{quote, format_ident};
 use proc_macro2::{TokenStream, Punct, Literal, Ident};
 use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
-use crate::value_calculator::{ValueCalculator, ProtobufMessage};
+use crate::value_calculator::ValueCalculator;
 use crate::matcher::str_to_value_calculator;
 
 fn parse_literal(input: &ParseBuffer) -> syn::Result<String> {
@@ -52,23 +52,11 @@ impl Parse for OneOfMapping {
         let info = parse_literal(input)?;
         let (name, info) = info.split_at(info.find("|").unwrap() + 1);
         let (prototype, field_number) = info.split_at(info.find("|").unwrap() + 1);
-        let mut field_number = field_number.to_string();
         let prototype = prototype.replace("|", "");
-
-        let proto_mapping = if prototype.as_str() == "message" {
-            let (field_nr, tag_size) = field_number.split_at(field_number.find("|").unwrap() + 1);
-            let tag_size: u32 = tag_size.parse().unwrap();
-
-            field_number = field_nr.replace("|", "");
-
-            Box::new(ProtobufMessage { tag_size })
-        } else {
-            str_to_value_calculator(&prototype)
-        };
 
         Ok(OneOfMapping {
             enum_case: format_ident!("{}", name.replace("|", "")),
-            proto_mapping,
+            proto_mapping: str_to_value_calculator(&prototype),
             field_number: field_number.parse().unwrap(),
         })
     }

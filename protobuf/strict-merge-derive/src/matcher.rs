@@ -40,9 +40,10 @@ pub enum Proto<'a> {
 
 pub fn str_to_value_calculator(str: &str) -> Box<dyn ValueCalculator> {
     match str {
-        "oneof" => unimplemented!("Oneof and message is not supported"),
+        "oneof" => unimplemented!("Oneof is not supported"),
         "double" => Box::new(0 as f64),
         "enum" => Box::new(ProtobufEnum),
+        "message" => Box::new(ProtobufMessage),
         _ => unimplemented!("Nothing configured for type: {}", str)
     }
 }

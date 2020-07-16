@@ -54,6 +54,7 @@ pub struct ProtobufEnumOrUnknown<E: ProtobufEnum> {
 impl<E: ProtobufEnum> ProtobufEnumOrUnknown<E> {
     /// Construct from typed enum
     pub fn new(e: E) -> ProtobufEnumOrUnknown<E> {
+        debug_assert_ne!(0, e.value());
         ProtobufEnumOrUnknown::from_i32(e.value())
     }
 

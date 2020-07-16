@@ -5,7 +5,7 @@ use syn::parse::{Parse, ParseBuffer};
 use syn::parse_macro_input;
 use crate::matcher::{Proto, find_attr, str_to_value_calculator, MapType};
 use crate::parser::{Prototype, FieldNumber, OneOfMapping, OneOfMapper};
-use crate::value_calculator::{Calculator, ValueCalculator, ProtobufMessage};
+use crate::value_calculator::{Calculator, ValueCalculator};
 use syn::punctuated::Punctuated;
 
 
@@ -13,7 +13,7 @@ mod matcher;
 mod parser;
 mod value_calculator;
 
-#[proc_macro_derive(StrictMerge, attributes(prototype, fieldnumber, oneof, tagsize))]
+#[proc_macro_derive(StrictMerge, attributes(prototype, fieldnumber, oneof))]
 pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input: DeriveInput = syn::parse(input).unwrap();
     let name = derive_input.ident;
@@ -90,7 +90,9 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     _ => panic!()
                 };
 
-                let (map_type, value_calculator): (_, Box<dyn ValueCalculator>) = if prototype == "oneof" {
+                let
+                    (map_type, value_calculator): (_, Box<dyn
+                ValueCalculator>) = if prototype == "oneof" {
                     let mut oneofs = vec![];
 
                     for oneof in find_attr(field, "oneof") {
@@ -107,16 +109,8 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 } else {
                     let field_number = find_attr(field, "fieldnumber").remove(0);
                     let field_number = parse_macro_input!(field_number as FieldNumber).0;
-                    let map_type = MapType::Simple(field_number);
 
-                    if prototype.as_str() == "message" {
-                        let tag_size = find_attr(field, "tagsize").remove(0);
-                        let tag_size = parse_macro_input!(tag_size as FieldNumber).0;
-
-                        (map_type, Box::new(ProtobufMessage { tag_size }))
-                    } else {
-                        (map_type, str_to_value_calculator(&prototype))
-                    }
+                    (MapType::Simple(field_number), str_to_value_calculator(&prototype))
                 };
 
                 let calculator = Calculator {
