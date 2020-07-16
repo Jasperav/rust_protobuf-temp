@@ -1,10 +1,10 @@
-use crate::calculators::{ValueCalculator, Assign, add_ampersand, RepeatedComputer, wire_check, RepeatedCustomComputer};
+use crate::calculators::{ValueCalculator, Assign, add_ampersand, RepeatedComputer, wire_check};
 use proc_macro2::{Ident, TokenStream};
 use crate::parser::OneOfMapping;
 
 pub struct Repeated {
     pub inner_calculator: Box<dyn ValueCalculator>,
-    pub tag_size: Option<u32>,
+    pub tag_size: u32,
 }
 
 
@@ -19,11 +19,11 @@ impl ValueCalculator for Repeated {
 
     fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
         let computer = self.inner_calculator.read_repeated().0;
-        let loop_variable = quote! { temp_loop };
+        let tag_size = self.tag_size;
 
         match computer {
             RepeatedComputer::Reuse => {
-                let tag_size = self.tag_size.unwrap();
+                let loop_variable = quote! { temp_loop };
                 let size = self.inner_calculator.size(&loop_variable, size_ident, field_number, type_without_opt, true);
 
                 quote! {
@@ -33,28 +33,9 @@ impl ValueCalculator for Repeated {
                     };
                 }
             }
-            RepeatedComputer::UseLen => {
-                let tag_size = self.tag_size.unwrap();
-
-                quote! {
-                    #size_ident += #tag_size * #ident.len() as u32;
-                }
+            RepeatedComputer::UseLen => quote! {
+                #size_ident += #tag_size * #ident.len() as u32;
             },
-            RepeatedComputer::Custom(c) => {
-                let rcs = RepeatedCustomComputer {
-                    size_ident: size_ident.clone(),
-                    field_number,
-                    loop_variable: loop_variable.clone()
-                };
-
-                let size = c(rcs);
-
-                quote! {
-                    for #loop_variable in &#ident {
-                        #size
-                    };
-                }
-            }
         }
     }
 

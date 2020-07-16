@@ -258,9 +258,6 @@ impl<'a> OneofGen<'a> {
     pub fn write(&self, w: &mut CodeWriter, customize: &Customize) {
         self.write_enum(w, customize);
         w.write_line("");
-        if customize.strict_values.unwrap_or(false) {
-            return;
-        }
         self.write_impl_oneof(w);
     }
 }

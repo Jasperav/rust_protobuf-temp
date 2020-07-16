@@ -1060,12 +1060,21 @@ impl<'a> FieldGen<'a> {
                         t => t.clone(),
                     };
 
-                    format!(
-                        "{}::rt::enum_or_unknown_size({}, {})",
-                        protobuf_crate_path(&self.customize),
-                        self.proto_field.number(),
-                        var_type.into_target(&param_type, var, &self.customize)
-                    )
+                    if c.strict_enums.unwrap_or(false) {
+                        format!(
+                            "{}::rt::enum_size({}, {})",
+                            protobuf_crate_path(&self.customize),
+                            self.proto_field.number(),
+                            var_type.into_target(&param_type, var, &self.customize)
+                        )
+                    } else {
+                        format!(
+                            "{}::rt::enum_or_unknown_size({}, {})",
+                            protobuf_crate_path(&self.customize),
+                            self.proto_field.number(),
+                            var_type.into_target(&param_type, var, &self.customize)
+                        )
+                    }
                 }
                 _ => {
                     let param_type = match var_type {

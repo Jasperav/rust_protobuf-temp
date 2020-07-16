@@ -43,16 +43,9 @@ pub enum Assign {
     Mutate,
 }
 
-pub struct RepeatedCustomComputer {
-    pub size_ident: Ident,
-    pub field_number: u32,
-    pub loop_variable: TokenStream
-}
-
 pub enum RepeatedComputer {
     Reuse,
     UseLen,
-    Custom(Box<dyn Fn(RepeatedCustomComputer) -> TokenStream>)
 }
 
 pub trait ValueCalculator {

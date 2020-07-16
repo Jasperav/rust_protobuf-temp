@@ -206,7 +206,7 @@ impl<'a> MessageGen<'a> {
                 variant.field.write_write_element(w, "os", &v);
             });
 
-            if !c.strict_values.unwrap_or(false) {
+            if !c.skip_unknown_fields.unwrap_or(false) {
                 w.write_line("os.write_unknown_fields(self.get_unknown_fields())?;");
             }
             w.write_line("::std::result::Result::Ok(())");
@@ -214,13 +214,11 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_get_cached_size(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-           return;
+        if !c.skip_cached_size.unwrap_or(false) {
+            w.def_fn("get_cached_size(&self) -> u32", |w| {
+                w.write_line("self.cached_size.get()");
+            });
         }
-
-        w.def_fn("get_cached_size(&self) -> u32", |w| {
-            w.write_line("self.cached_size.get()");
-        });
     }
 
     fn write_default_instance(&self, w: &mut CodeWriter) {
@@ -253,13 +251,13 @@ impl<'a> MessageGen<'a> {
             self.write_match_each_oneof_variant(w, |w, variant, v, vtype| {
                 variant.field.write_element_size(w, v, vtype, "my_size", c);
             });
-            if !c.strict_values.unwrap_or(false) {
+            if !c.skip_unknown_fields.unwrap_or(false) {
                 w.write_line(&format!(
                     "my_size += {}::rt::unknown_fields_size(self.get_unknown_fields());",
                     protobuf_crate_path(&self.customize)
                 ));
             }
-            if !c.strict_values.unwrap_or(false) {
+            if !c.skip_cached_size.unwrap_or(false) {
                 w.write_line("self.cached_size.set(my_size);");
             }
             w.write_line("my_size");
@@ -267,7 +265,7 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_field_accessors(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
+        if c.remove_accessors.unwrap_or(false) {
             return;
         }
         for f in self.fields_except_group() {
@@ -276,21 +274,20 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_impl_self(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-            return;
-        }
         w.impl_self_block(&format!("{}", self.type_name), |w| {
             // TODO: new should probably be a part of Message trait
-            w.pub_fn(&format!("new() -> {}", self.type_name), |w| {
-                w.write_line("::std::default::Default::default()");
-            });
+            if c.no_option.is_none() {
+                w.pub_fn(&format!("new() -> {}", self.type_name), |w| {
+                    w.write_line("::std::default::Default::default()");
+                });
+            }
 
             self.write_field_accessors(w, c);
         });
     }
 
     fn write_unknown_fields(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
+        if c.skip_unknown_fields.unwrap_or(false) {
             return;
         }
         let sig = format!(
@@ -330,7 +327,7 @@ impl<'a> MessageGen<'a> {
                         });
                     }
                     w.case_block("_", |w| {
-                        if c.strict_values.unwrap_or(false) {
+                        if c.skip_unknown_fields.unwrap_or(false) {
                             w.write_line("debug_assert!(false, \"number: {:#?}, wire_type: {:#?}\", field_number, wire_type);");
                             w.write_line("return ::protobuf::ProtobufResult::Err(::protobuf::ProtobufError::WireError(::protobuf::error::WireError::IncorrectVarint));");
                         } else {
@@ -383,7 +380,7 @@ impl<'a> MessageGen<'a> {
     }
 
     fn write_is_initialized(&self, w: &mut CodeWriter, c: &Customize) {
-        if !c.strict_values.unwrap_or(true) {
+        if c.skip_initialized_check.unwrap_or(false) {
             w.def_fn(&format!("is_initialized(&self) -> bool"), |w| {
                 w.write_line("true");
             });
@@ -451,7 +448,7 @@ impl<'a> MessageGen<'a> {
                 w.def_fn(&format!("new() -> {}", self.type_name), |w| {
                     w.write_line(&format!("{}::new()", self.type_name));
                 });
-                if !self.lite_runtime && !c.strict_values.unwrap_or(false) {
+                if !self.lite_runtime && !c.skip_descriptor_static.unwrap_or(false) {
                     w.write_line("");
                     self.write_descriptor_static(w);
                 }
@@ -508,10 +505,7 @@ impl<'a> MessageGen<'a> {
         //     })
     }
 
-    fn write_impl_value(&self, w: &mut CodeWriter, c: &Customize) {
-        if c.strict_values.unwrap_or(false) {
-            return;
-        }
+    fn write_impl_value(&self, w: &mut CodeWriter) {
         w.impl_for_block(
             &format!(
                 "{}::reflect::ProtobufValue",
@@ -547,14 +541,14 @@ impl<'a> MessageGen<'a> {
             &format!("{}", self.type_name),
             |w| {
                 w.def_fn("clear(&mut self)", |w| {
-                    if c.strict_values.unwrap_or(false) {
+                    if c.skip_clear.unwrap_or(false) {
                         return;
                     }
                     for f in self.fields_except_group() {
                         f.write_clear(w);
                     }
 
-                    if !c.strict_values.unwrap_or(false) {
+                    if !c.skip_unknown_fields.unwrap_or(false) {
                         w.write_line("self.unknown_fields.clear();");
                     }
                 });
@@ -606,14 +600,14 @@ impl<'a> MessageGen<'a> {
             }
             w.comment("special fields");
 
-            if !customize.strict_values.unwrap_or(false) {
+            if !customize.skip_unknown_fields.unwrap_or(false) {
                 serde::write_serde_attr(w, &self.customize, "serde(skip)");
                 w.pub_field_decl(
                     "unknown_fields",
                     &format!("{}::UnknownFields", protobuf_crate_path(&self.customize)),
                 );
             }
-            if !customize.strict_values.unwrap_or(false) {
+            if !customize.skip_cached_size.unwrap_or(false) {
                 serde::write_serde_attr(w, &self.customize, "serde(skip)");
                 w.pub_field_decl(
                     "cached_size",
@@ -633,11 +627,15 @@ impl<'a> MessageGen<'a> {
             &format!("&'a {}", self.type_name),
             |w| {
                 w.def_fn(&format!("default() -> &'a {}", self.type_name), |w| {
-                    w.write_line(&format!(
-                        "<{} as {}::Message>::default_instance()",
-                        self.type_name,
-                        protobuf_crate_path(&self.customize),
-                    ));
+                    if c.no_option.is_some() {
+                        w.write_line("unreachable!();");
+                    } else {
+                        w.write_line(&format!(
+                            "<{} as {}::Message>::default_instance()",
+                            self.type_name,
+                            protobuf_crate_path(&self.customize),
+                        ));
+                    }
                 });
             },
         );
@@ -679,7 +677,7 @@ impl<'a> MessageGen<'a> {
             self.write_impl_show(w, customize);
         }
         w.write_line("");
-        self.write_impl_value(w, customize);
+        self.write_impl_value(w);
 
         let mod_name = message_name_to_nested_mod_name(&self.message.message.get_name());
 

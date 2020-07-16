@@ -582,19 +582,6 @@ fn read_repeated_packed_enum_or_unknown_into<E: ProtobufEnum>(
     Ok(())
 }
 
-fn read_repeated_packed_enum_strict<E: ProtobufEnumStrict>(
-    is: &mut CodedInputStream,
-    target: &mut Vec<E>,
-) -> ProtobufResult<()> {
-    let len = is.read_raw_varint64()?;
-    let old_limit = is.push_limit(len)?;
-    while !is.eof()? {
-        target.push(is.read_enum_strict()?);
-    }
-    is.pop_limit(old_limit);
-    Ok(())
-}
-
 /// Read repeated `enum` field into given vec,
 /// and when value is unknown store it in unknown fields
 /// which matches proto2 spec.
@@ -933,21 +920,6 @@ pub fn read_repeated_message_strict_into_vec<M>(
             };
             is.decr_recursion();
             res
-        }
-        _ => Err(unexpected_wire_type(wire_type)),
-    }
-}
-
-pub fn read_repeated_enum_strict_into_vec<E>(
-    wire_type: WireType,
-    is: &mut CodedInputStream,
-    target: &mut Vec<E>,
-) -> ProtobufResult<()> where E: ProtobufEnumStrict {
-    match wire_type {
-        WireTypeLengthDelimited => read_repeated_packed_enum_strict(is, target),
-        WireTypeVarint => {
-            target.push(is.read_enum_strict()?);
-            Ok(())
         }
         _ => Err(unexpected_wire_type(wire_type)),
     }

@@ -72,7 +72,7 @@ impl RustType {
             RustType::Option(ref param) => {
                 let type_str = param.to_code(customize);
 
-                if let Some(e) = customize.wrap_in_option_if_starts_with {
+                if let Some(e) = customize.no_option {
                     if !type_str.starts_with(e) {
                         return format!("{}", &type_str)
                     }
@@ -101,12 +101,14 @@ impl RustType {
             | RustType::Enum(ref name, _)
             | RustType::Oneof(ref name) => format!("{}", name),
             RustType::EnumOrUnknown(ref name, _) => {
-                if customize.strict_values.unwrap_or(false) {
-                    return format!(
-                    "{}",
-                    name
-                )
-            }
+                if let Some(s) = customize.strict_enums {
+                    if s {
+                        return format!(
+                            "{}",
+                            name
+                        )
+                    }
+                }
                 format!(
                     "{}::ProtobufEnumOrUnknown<{}>",
                     protobuf_crate_path(customize),
@@ -251,12 +253,14 @@ impl RustType {
             // Note: default value of enum type may not be equal to default value of field
             RustType::Enum(ref name, ref default) => format!("{}::{}", name, default),
             RustType::EnumOrUnknown(ref name, ref default) => {
-                if customize.strict_values.unwrap_or(false) {
-                    return format!(
-                        "{}::{}",
-                        name,
-                        default
-                    )
+                if let Some(s) = customize.strict_enums {
+                    if s {
+                        return format!(
+                            "{}::{}",
+                            name,
+                            default
+                        )
+                    }
                 }
                 format!(
                     "{}::ProtobufEnumOrUnknown::new({}::{})",
@@ -377,7 +381,7 @@ impl RustType {
                 return Ok(format!("{}::ProtobufEnum::value(&{})", protobuf_crate_path(customize), v))
             },
             (&RustType::EnumOrUnknown(..), &RustType::Int(true, 32)) => {
-                return if customize.strict_values.unwrap_or(false) {
+                return if customize.strict_enums.unwrap_or(false) {
                     Ok(format!("{}::ProtobufEnum::value(&{})", protobuf_crate_path(customize), v))
                 } else {
                     Ok(format!("{}::ProtobufEnumOrUnknown::value(&{})", protobuf_crate_path(customize), v))
@@ -387,7 +391,7 @@ impl RustType {
                 return Ok(format!("{}::ProtobufEnum::value({})", protobuf_crate_path(customize), v))
             }
             (&RustType::Ref(ref t), &RustType::Int(true, 32)) if t.is_enum_or_unknown() => {
-                return if customize.strict_values.unwrap_or(false) {
+                return if customize.strict_enums.unwrap_or(false) {
                     Ok(format!("{}::ProtobufEnum::value({})", protobuf_crate_path(customize), v))
                 } else {
                     Ok(format!("{}::ProtobufEnumOrUnknown::value({})", protobuf_crate_path(customize), v))
@@ -395,14 +399,14 @@ impl RustType {
             },
             (&RustType::EnumOrUnknown(ref f, ..), &RustType::Enum(ref t, ..)) if f == t => {
                 // TODO: ignores default value
-                return if customize.strict_values.unwrap_or(false) {
+                return if customize.strict_enums.unwrap_or(false) {
                     Ok(format!("{}", v))
                 } else {
                     Ok(format!("{}::ProtobufEnumOrUnknown::enum_value_or_default(&{})", protobuf_crate_path(customize), v))
                 }
             }
             (&RustType::Enum(ref f, ..), &RustType::EnumOrUnknown(ref t, ..)) if f == t => {
-                return if customize.strict_values.unwrap_or(false) {
+                return if customize.strict_enums.unwrap_or(false) {
                     Ok(format!("{}", v))
                 } else {
                     Ok(format!("{}::ProtobufEnumOrUnknown::new({})", protobuf_crate_path(customize), v))
