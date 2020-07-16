@@ -28,14 +28,6 @@ fn add_deserialization(field_number: u32, assign: TokenStream) -> TokenStream {
     }
 }
 
-fn wire_check(wire_check: Option<TokenStream>) -> TokenStream {
-    wire_check.map(|w| quote! {
-            if wire_type != ::protobuf::wire_format::#w {
-                return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-            }
-        }).unwrap_or(TokenStream::new())
-}
-
 pub enum ValueOption {
     Optional,
     MandatoryOptional,
@@ -66,14 +58,17 @@ pub trait ValueCalculator {
             Proto::Simple(..) => quote! { self.#ident },
         };
 
+        let size = self.size(&another_ident, &format_ident!("size"), field_number);
+        let write = self.write(&another_ident, field_number);
         let reader = self.read(ident);
-        let mut assign = wire_check(self.wire_check());
+        let mut assign = self.wire_check().map(|w| quote! {
+            if wire_type != ::protobuf::wire_format::#w {
+                return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+            }
+        }).unwrap_or(TokenStream::new());
 
         match proto {
             Proto::OneOfCase(enum_case) => {
-                let size = self.size(&another_ident, &format_ident!("size"), field_number);
-                let write = self.write(&another_ident, field_number);
-
                 compute_sizer.push(size);
                 os_writer.push(write);
                 assign.extend(quote! {
@@ -112,28 +107,13 @@ pub trait ValueCalculator {
                     #ident = #ts
                 });
 
-                // TODO: To many match's on the same value
-                match &value_option {
-                    ValueOption::Optional | ValueOption::Mandatory =>struct_gen.push(quote! {
-                        #ident
-                    }),
-                    ValueOption::MandatoryOptional => struct_gen.push(quote! {
-                        #ident.unwrap()
-                    }),
-                }
+                let ts = self.check_has_not_default_value(&another_ident);
 
-                let ident_some = match &value_option {
-                    ValueOption::Optional =>  quote! { e } ,
-                    ValueOption::MandatoryOptional | ValueOption::Mandatory => quote! { # another_ident },
-                };
-                let size = self.size(&ident_some, &format_ident!("size"), field_number);
-                let write = self.write(&ident_some, field_number);
-
-                let (compute_size, writer) = match self.check_has_not_default_value(&another_ident) {
+                let (compute_size, writer) = match ts {
                     None => (quote! {
                         #size
                     },
-                     quote! {
+                             quote! {
                         #write
                      }),
                     Some(ts) => (quote! {
@@ -147,15 +127,25 @@ pub trait ValueCalculator {
                     }),
                 };
 
+                // TODO: To many match's on the same value
+                match &value_option {
+                    ValueOption::Optional | ValueOption::Mandatory => struct_gen.push(quote! {
+                        #ident
+                    }),
+                    ValueOption::MandatoryOptional => struct_gen.push(quote! {
+                        #ident.unwrap()
+                    }),
+                }
+
                 match &value_option {
                     ValueOption::Optional => {
                         compute_sizer.push(quote! {
-                            if let Some(#ident_some) = #another_ident {
+                            if let Some(e) = #ident {
                                 #compute_size
                             }
                         });
                         os_writer.push(quote! {
-                            if let Some(#ident_some) = #another_ident {
+                            if let Some(e) = #ident {
                                 #writer
                             }
                         });
@@ -195,7 +185,7 @@ pub trait ValueCalculator {
 impl OneOfMapper {
     fn loop_through_cases<T: Fn(&OneOfMapping, &TokenStream) -> TokenStream>(&self, ident: &TokenStream, gen_ts: T) -> TokenStream {
         let mut ts = vec![];
-        let dummy_ident = quote! { dummy_ident };
+        let dummy_ident = quote! { "dummy_ident" };
         let full_type = &self.full_type;
 
         for mapping in self.mapping.iter() {
@@ -204,8 +194,8 @@ impl OneOfMapper {
             let gen = gen_ts(&mapping, &dummy_ident);
 
             ts.push(quote! {
-               #full_type::#enum_case(#dummy_ident) => {
-                   #gen
+               #full_type::#enum_case(ref #dummy_ident) {
+                   gen
                }
             });
         }
@@ -261,13 +251,13 @@ impl ValueCalculator for OneOfMapper {
         let mut ts = TokenStream::new();
 
         for mapping in self.mapping.iter() {
-            let wire_check = wire_check(mapping.proto_mapping.wire_check());
+            let wire_check = mapping.proto_mapping.wire_check();
             let read = mapping.proto_mapping.read(ident);
             let enum_case = &mapping.enum_case;
 
             let assign = quote! {
                 #wire_check
-                #ident = Some(#full_type::#enum_case(#read)),
+                #ident = Some(#full_type::#enum_case(#read));
             };
 
             ts.extend(add_deserialization(mapping.field_number, assign));
@@ -281,7 +271,7 @@ impl ValueCalculator for OneOfMapper {
             let size = mapping.proto_mapping.size(dummy_ident, size_ident, mapping.field_number);
 
             quote! {
-                #size
+                #size_ident += #size
             }
         })
     }
@@ -305,7 +295,9 @@ impl ValueCalculator for OneOfMapper {
     }
 
     fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        None
+        Some(quote! {
+            #ident.is_none()
+        })
     }
 }
 

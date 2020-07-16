@@ -3,23 +3,20 @@ use protobuf::error::ProtobufError::WireError;
 
 #[derive(protobuf::StrictMerge, Debug, PartialEq)]
 pub struct Location {
-    // #[prototype = "double"]
-    // #[fieldnumber = 1]
-    // pub double: f64,
-    // #[prototype = "double"]
-    // #[fieldnumber = 2]
-    // pub o_double_default: f64,
-    // #[prototype = "enum"]
-    // #[fieldnumber = 3]
-    // pub _enum: crate::api::ConversationCreateRespError,
-    // #[prototype = "enum"]
-    // #[fieldnumber = 4]
-    // pub o_enum: Option<crate::api::ConversationCreateRespError>,
-    #[prototype = "oneof"]
-    #[oneof = "success|double|1"]
-    #[oneof = "error|enum|2"]
-    #[fieldnumber = 12]
-    pub one_of: some_enum::SomeResult,
+    #[prototype = "double"]
+    #[fieldnumber = 1]
+    pub double: f64,
+    #[prototype = "double"]
+    #[fieldnumber = 2]
+    pub o_double_default: f64,
+    #[prototype = "enum"]
+    #[fieldnumber = 3]
+    pub _enum: crate::api::ConversationCreateRespError,
+    // #[prototype = "oneof"]
+    // #[oneof = "succes|double|1"]
+    // #[oneof = "error|enum|2"]
+    // #[fieldnumber = 12]
+    // pub one_of: some_enum::Result,
     // #[prototype = "uint32"]
     // #[fieldnumber = 3]
     // pub _u32: u32,
@@ -52,89 +49,17 @@ pub struct Location {
     // #[fieldnumber = 13]
     // pub optional_enum: Option<some_enum::Result>,
 }
-
-
-impl Location {
-    fn strict_merge(is: &mut protobuf::CodedInputStream< \'_ >) -> protobuf::
-    ProtobufResult<Self>
-    {
-        use std::str::FromStr;
-        let mut processed_field_indexes = std::
-        collections::HashSet::new();
-        let mut one_of = None;
-        while !is.
-            eof()?
-        {
-            l
-        }
-        et(field_number, wire_type) = is.read_tag_unpack()?;
-        match
-        field_number
-        {
-            1u32 =>
-                {
-                    debug_assert!(processed_field_indexes . insert(1u32),
-                                 \"Double processed field index found for matching field {} (note that fields indexes start with 1, not 0)\",\
-                                                  1u32) ; if wire_type != :: protobuf :: wire_format ::\
-                                                                  WireTypeFixed64\
-                                                                                  {\
-                                                                                                      return :: std :: result :: Result ::\
-                                                                                                                          Err(:: protobuf :: rt :: unexpected_wire_type(wire_type))\
-                                                                                                                                              ;\
-                                                                                                                                                              } one_of =\
-                                                                                                                                                                              Some(some_enum :: SomeResult ::\
-                                                                                                                                                                                                   success(is . read_double() ?)),\
-                                                                                                                                                                                                               } 2u32 =>\
-                                                                                                                                                                                                                           {\
-                                                                                                                                                                                                                                           debug_assert !\
-                                                                                                                                                                                                                                                           (processed_field_indexes . insert(2u32),\
-                                                                                                                                                                                                                                                                            \"Double processed field index found for matching field {} (note that fields indexes start with 1, not 0)\",\
-                                                                                                                                                                                                                                                                                             2u32) ; if wire_type != :: protobuf :: wire_format ::\
-                                                                                                                                                                                                                                                                                                             WireTypeVarint\
-                                                                                                                                                                                                                                                                                                                             {\
-                                                                                                                                                                                                                                                                                                                                                 return :: std :: result :: Result ::\
-                                                                                                                                                                                                                                                                                                                                                                     Err(:: protobuf :: rt :: unexpected_wire_type(wire_type))\
-                                                                                                                                                                                                                                                                                                                                                                                         ;\
-                                                                                                                                                                                                                                                                                                                                                                                                         } one_of =\
-                                                                                                                                                                                                                                                                                                                                                                                                                         Some(some_enum :: SomeResult ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                              error(is . read_enum_strict() ?)),\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          } _ =>\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                      {\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      debug_assert !\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      (false, \"number: {:#?}, wire_type: {:#?}\", field_number,\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       wire_type) ; return :: protobuf :: ProtobufResult ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Err(:: protobuf :: ProtobufError ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           WireError(:: protobuf :: error :: WireError ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         IncorrectVarint)) ;\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     }\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             }\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 } if one_of . is_none()\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     {\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             debug_assert !\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     (false,\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \"Unexpected empty optional found while deserializing property {}\",\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       stringify ! (one_of)) ; return :: protobuf :: ProtobufResult ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Err(:: protobuf :: ProtobufError ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           WireError(:: protobuf :: error :: WireError :: IncorrectVarint)) ;\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               } let gen_struct = Location { one_of : one_of . unwrap() } ; :: std ::\
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   result :: Result :: Ok(gen_struct)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   }
-            }
-}
-}
-}
-
 pub mod some_enum {
     #[derive(PartialEq, Debug)]
-    pub enum SomeResult {
+    pub enum Result {
         success(f64),
         error(crate::api::ConversationCreateRespError),
         //error(super::ConversationCreateRespError),
     }
 
-    impl ::protobuf::Oneof for SomeResult {}
+    impl ::protobuf::Oneof for Result {
+    }
 }
-
 //
 // #[derive(PartialEq,protobuf::StrictMerge,Debug)]
 // pub struct ConversationCreateSuccess {
@@ -171,7 +96,7 @@ impl ProtobufEnumStrict for ConversationCreateRespError {
             ConversationCreateRespError::CONVERSATION_CREATE_RESP_ERROR_NOT_SET => {
                 debug_assert!(false, "Unexpected found zero value in ConversationCreateRespError");
                 0
-            }
+            },
             ConversationCreateRespError::TOO_CLOSE_TO_OTHER_CONVERSATION => 1,
         }
     }
