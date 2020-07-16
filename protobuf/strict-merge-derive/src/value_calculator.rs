@@ -278,39 +278,6 @@ pub fn add_deref(is_reference: bool) -> TokenStream {
 }
 
 
-pub struct Repeated {
-    pub inner_calculator: Box<dyn ValueCalculator>
-}
-
-
-impl ValueCalculator for Repeated {
-    fn read(&self, ident: &Ident, wire_type_ident: &Ident, is_ident: &Ident, type_without_opt: &TokenStream) -> TokenStream {
-        unimplemented!()
-    }
-
-    fn size(&self, ident: &TokenStream, size_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        unimplemented!()
-    }
-
-    fn write(&self, ident: &TokenStream, os_ident: &Ident, field_number: u32, type_without_opt: &TokenStream, is_reference: bool) -> TokenStream {
-        unimplemented!()
-    }
-
-    fn default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        Some(quote! {
-            vec![]
-        })
-    }
-
-    fn check_has_not_default_value(&self, ident: &TokenStream) -> Option<TokenStream> {
-        Some(quote! {
-            !#ident.is_empty()
-        })
-    }
-}
-
-
-
 pub struct ProtobufMessage {
     pub(crate) tag_size: u32
 }
