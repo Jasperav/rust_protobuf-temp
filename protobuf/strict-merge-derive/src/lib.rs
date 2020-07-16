@@ -2,7 +2,7 @@ use syn::{DeriveInput, Data, Fields, Field};
 use quote::{quote, format_ident};
 use proc_macro2::TokenStream;
 
-#[proc_macro_derive(StrictMerge, attributes(t_double, t_float, t_int32, t_int64, t_uint32, t_uint64, t_sint32, t_sint64, t_fixed32, t_fixed64, t_sfixed32, t_sfixed64, t_bool, t_string, t_bytes , t_enum , t_message, t_group))]
+#[proc_macro_derive(StrictMerge)]
 pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input: DeriveInput = syn::parse(input).unwrap();
     let name = derive_input.ident;
@@ -32,21 +32,25 @@ pub fn strict_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     let index = index as u32 + 1;
                     let p = || panic!("{:#?}", field);
                     let field_opt = format_ident!("{}", field.ident.clone().unwrap().to_string() + "_opt");
+                    let (deserialize, default_value) = match &field.ty {
+                        syn::Type::Path(p) => {
+                            let some_ty = &p.path.segments[0].ident.to_string();
 
-                    let attr = field.attrs.last().unwrap().path.segments.first().unwrap().ident.to_string().replace("t_", "");
-
-                    let (deserialize, default_value) = match attr.as_str() {
-                        "sfixed64" => (quote! {
-                            if wire_type != ::protobuf::wire_format::WireTypeFixed64 {
-                                return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                            if some_ty == "f64" {
+                                (quote! {
+                                    if wire_type != ::protobuf::wire_format::WireTypeFixed64 {
+                                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                                    }
+                                    #field_opt = Some(is.read_double()?);
+                                }, Some(quote! {
+                                    0 as f64
+                                }))
+                            } else {
+                                panic!("{:#?}", some_ty);
                             }
-                            #field_opt = Some(is.read_double()?);
-                        }, Some(quote! {
-                            0 as f64
-                        })),
-                        _ => unreachable!("Unexpected attributed found: {}", attr)
+                        },
+                        _ => p()
                     };
-
                     (quote! {
                         #index => {
                             debug_assert_eq!(None, #field_opt);

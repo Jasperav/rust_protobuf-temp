@@ -9,7 +9,6 @@ use std::mem;
 use std::option;
 
 use crate::clear::Clear;
-use std::fmt::Debug;
 
 /// Option-like objects
 #[doc(hidden)]
@@ -89,7 +88,6 @@ impl<T> OptionLike<T> for Option<Box<T>> {
 }
 
 /// Like `Option<T>`, but keeps the actual element on `clear`.
-///
 pub struct SingularField<T> {
     value: T,
     set: bool,
