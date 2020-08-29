@@ -231,7 +231,7 @@ impl<'a> OneofGen<'a> {
         let mut derive = vec!["Clone", "PartialEq", "Debug"];
         add_derives(&mut derive, &customize.derives, self.oneof.rust_name().ident.to_string());
         w.derive(&derive);
-        serde::write_serde_attr(w, &self.customize, "derive(Serialize, Deserialize)");
+        serde::write_serde_attr(w, &self.customize, "derive(serde::Serialize, serde::Deserialize)");
         w.pub_enum(&self.oneof.rust_name().ident.to_string(), |w| {
             for variant in self.variants_except_group() {
                 w.write_line(&format!(
